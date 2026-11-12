@@ -1,0 +1,2 @@
+# Source PDFs are kept out of the public repository; the verses are in js/verses.js
+*.pdf
