@@ -25,7 +25,14 @@ var MAX_TIME_MS = 24 * 60 * 60 * 1000;
 
 // ---- HTTP entry points ---------------------------------------------------
 
+/* Run this once from the Apps Script editor (choose "setup", press Run) to
+   create the tabs and headers straight away. Opening the web app URL does the same. */
+function setup() {
+  Object.keys(SHEETS).forEach(function (name) { sheet(name); });
+}
+
 function doGet() {
+  setup();
   return jsonOut({ ok: true, result: { status: 'Memory Verses quiz API is running' } });
 }
 

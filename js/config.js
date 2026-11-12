@@ -2,7 +2,7 @@
    Apps Script web app. Paste its URL here (setup steps are in README.md).
    Practice mode works without it. */
 window.CONFIG = {
-  API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE',
+  API_URL: 'https://script.google.com/macros/s/AKfycbxEw2dPHi746zwNg-WBkBA0nIfhySHrrjbFhCGhuuKYCIdkyFDPeCTx-Ittkzbj638v/exec',
 };
 
 /* POST as text/plain on purpose: application/json would trigger a CORS
