@@ -22,6 +22,21 @@ split point, the scrambled words and the wrong answers are all picked at random.
 | Word order | Tap the scrambled words in the right order |
 | Flash card | Say the verse from memory, reveal it, mark yourself |
 
+## Memorize assistant
+
+**Memorize** in the menu bar opens a listening screen:
+
+1. Choose the verse range and how many times each verse is repeated (1–20).
+2. Optionally change the reading speed, or turn off reading the reference.
+3. Press **Start listening**. Verse 1 is read that many times, then verse 2, and so on.
+
+Pause, Resume, Previous verse, Next verse and Stop are on the player. Resume starts
+the interrupted reading of the verse again from its beginning.
+
+It uses the voice built into the browser, in the language chosen in the menu bar,
+so nothing is downloaded. Tamil needs a Tamil voice on the device; the screen says
+so when none is found (on Android: Settings › Text-to-speech › Google › Install voice data).
+
 ## Group quiz (events + leaderboard)
 
 On the home page, under the practice settings, there is a **Group quiz** card:

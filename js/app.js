@@ -107,6 +107,25 @@
       loading: 'Loading…',
       notFound: 'This event link is not valid.',
       loadFail: 'The event could not be loaded. Check your connection.',
+      // memorize assistant
+      memorize: 'Memorize',
+      memoTag: 'Listen & repeat',
+      memoSub: 'Choose the verses and how many times each one is read aloud. Say it along with the voice.',
+      repeat: 'Times to repeat each verse',
+      speed: 'Reading speed',
+      rates: { slow: 'Slow', normal: 'Normal', fast: 'Fast' },
+      sayRef: 'Read the reference too',
+      listen: 'Start listening',
+      pause: 'Pause',
+      resume: 'Resume',
+      stop: 'Stop',
+      prevVerse: '← Previous verse',
+      nextVerse: 'Next verse →',
+      memoAt: (i, n, r, m) => `Verse ${i} of ${n} · Time ${r} of ${m}`,
+      memoDone: 'All done! Listen again, or stop and pick new verses.',
+      listenAgain: 'Listen again',
+      noSpeech: 'This browser cannot read aloud. Try Chrome, Edge or Safari.',
+      noVoice: 'No English voice was found on this device, so it may read silently or wrongly.',
       types: {
         fill: ['Missing word', 'Pick the word that fills the blank'],
         ref: ['Where is it?', 'Pick the reference for the verse'],
@@ -197,6 +216,24 @@
       loading: 'ஏற்றப்படுகிறது…',
       notFound: 'இந்த நிகழ்வு இணைப்பு செல்லுபடியாகாது.',
       loadFail: 'நிகழ்வை ஏற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்க்கவும்.',
+      memorize: 'மனப்பாடம்',
+      memoTag: 'கேட்டுத் திரும்பச் சொல்லுங்கள்',
+      memoSub: 'வசனங்களையும், ஒவ்வொரு வசனமும் எத்தனை முறை வாசிக்கப்பட வேண்டும் என்பதையும் தேர்ந்தெடுங்கள். குரலுடன் சேர்ந்து சொல்லுங்கள்.',
+      repeat: 'ஒவ்வொரு வசனமும் எத்தனை முறை',
+      speed: 'வாசிக்கும் வேகம்',
+      rates: { slow: 'மெதுவாக', normal: 'சாதாரணம்', fast: 'வேகமாக' },
+      sayRef: 'வசன முகவரியையும் வாசிக்கவும்',
+      listen: 'கேட்கத் தொடங்கு',
+      pause: 'இடைநிறுத்து',
+      resume: 'தொடர்',
+      stop: 'நிறுத்து',
+      prevVerse: '← முந்தைய வசனம்',
+      nextVerse: 'அடுத்த வசனம் →',
+      memoAt: (i, n, r, m) => `வசனம் ${i} / ${n} · ${r} / ${m} முறை`,
+      memoDone: 'முடிந்தது! மீண்டும் கேளுங்கள், அல்லது நிறுத்திப் புதிய வசனங்களைத் தேர்ந்தெடுங்கள்.',
+      listenAgain: 'மீண்டும் கேள்',
+      noSpeech: 'இந்த உலாவியால் சத்தமாக வாசிக்க முடியாது. Chrome, Edge அல்லது Safari-ஐப் பயன்படுத்துங்கள்.',
+      noVoice: 'இந்தச் சாதனத்தில் தமிழ்க் குரல் இல்லை, அதனால் வாசிப்பு கேட்காமலோ தவறாகவோ இருக்கலாம். Android-இல்: Settings › Text-to-speech › Google › Install voice data என்பதில் தமிழைச் சேர்க்கவும்.',
       types: {
         fill: ['விடுபட்ட சொல்', 'விடுபட்ட சொல்லைத் தேர்ந்தெடுங்கள்'],
         ref: ['வசனம் எங்கே?', 'வசனத்திற்குரிய முகவரியைத் தேர்ந்தெடுங்கள்'],
@@ -217,7 +254,12 @@
   };
 
   /* ---- State ------------------------------------------------------------ */
-  const settings = { lang: 'en', from: 1, to: TOTAL, count: 10, types: Engine.TYPES.slice() };
+  const MAX_REPEAT = 20;
+  const RATES = { slow: 0.75, normal: 1, fast: 1.25 };
+  const settings = {
+    lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
+    repeat: 3, rate: 'normal', sayRef: true, // memorize assistant
+  };
   {
     const saved = store.get(STORE, {});
     const int = (x, lo, hi, d) => (Number.isInteger(x) && x >= lo && x <= hi ? x : d);
@@ -225,6 +267,9 @@
     settings.from = int(saved.from, 1, TOTAL, 1);
     settings.to = int(saved.to, settings.from, TOTAL, TOTAL);
     settings.count = int(saved.count, 1, MAXQ, 10);
+    settings.repeat = int(saved.repeat, 1, MAX_REPEAT, 3);
+    if (saved.rate in RATES) settings.rate = saved.rate;
+    if (typeof saved.sayRef === 'boolean') settings.sayRef = saved.sayRef;
     if (Array.isArray(saved.types)) {
       const types = Engine.TYPES.filter((t) => saved.types.includes(t));
       if (types.length) settings.types = types;
@@ -232,7 +277,7 @@
   }
   const save = () => store.set(STORE, settings);
 
-  let view = 'setup';  // setup | created | loading | error | join | game | results | board
+  let view = 'setup';  // setup | memo | created | loading | error | join | game | results | board
   let game = null;     // { qs, i, score }
   let event = null;    // the group event being viewed: { id, title, lang, from, to, count, types, seed }
   let board = null;    // { rows: [{ name, score, timeMs }], playing }
@@ -320,8 +365,8 @@
   }
 
   function onSetupInput(e) {
-    const form = $('#setup');
-    if (!form || !form.contains(e.target)) return;
+    const form = e.target.closest ? e.target.closest('form') : null;
+    if (!form || (form.id !== 'setup' && form.id !== 'memo-form')) return;
     const name = e.target.name;
     if (name === 'from' || name === 'to') {
       settings[name] = Number(e.target.value);
@@ -336,9 +381,225 @@
     } else if (name === 'type') {
       const on = [...form.querySelectorAll('input[name="type"]:checked')].map((el) => el.value);
       settings.types = Engine.TYPES.filter((t) => on.includes(t));
+    } else if (name === 'repeat') {
+      settings.repeat = Math.min(MAX_REPEAT, Math.max(1, Number(e.target.value) || 1));
+    } else if (name === 'rate') {
+      if (e.target.value in RATES) settings.rate = e.target.value;
+    } else if (name === 'sayRef') {
+      settings.sayRef = e.target.checked;
     }
     save();
-    syncSetup();
+    if (form.id === 'setup') syncSetup();
+    else syncMemo();
+  }
+
+  /* ---- Memorize assistant ----------------------------------------------
+     Reads each verse in the range aloud, `repeat` times, then moves on.
+     Uses the browser's own speech (Web Speech API), so nothing is downloaded. */
+  const synth = window.speechSynthesis || null;
+  let memo = null;      // { list, reps, i, r, paused, done, token }; null while choosing settings
+  let memoTimer = 0;
+  let memoUtter = null; // keeps the utterance alive: Chrome can lose the end event of a collected one
+  let wakeLock = null;
+
+  function pickVoice(code) {
+    if (!synth) return null;
+    const voices = synth.getVoices();
+    const tag = (v) => v.lang.replace('_', '-').toLowerCase();
+    const want = code === 'ta' ? ['ta-in', 'ta'] : ['en-in', 'en-gb', 'en-us', 'en'];
+    for (const w of want) {
+      const v = voices.find((x) => tag(x) === w || (w.length === 2 && tag(x).startsWith(`${w}-`)));
+      if (v) return v;
+    }
+    return null;
+  }
+
+  /* Short pieces, cut at punctuation: Chrome stops speaking part way through a long utterance. */
+  function speechChunks(text) {
+    const parts = text.match(/[^.;:!?,]+[.;:!?,”’"']*\s*/g) || [text];
+    const out = [];
+    let cur = '';
+    parts.forEach((p) => {
+      if (cur && (cur + p).length > 160) {
+        out.push(cur.trim());
+        cur = '';
+      }
+      cur += p;
+    });
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  }
+
+  /* Keep the screen on while it is reading; ignored where unsupported. */
+  async function keepAwake(on) {
+    try {
+      if (on && !wakeLock && navigator.wakeLock) {
+        const lock = await navigator.wakeLock.request('screen');
+        lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });
+        wakeLock = lock;
+      } else if (!on && wakeLock) {
+        const lock = wakeLock;
+        wakeLock = null;
+        await lock.release();
+      }
+    } catch (e) { /* not allowed right now */ }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && memo && !memo.paused && !memo.done) keepAwake(true); // the lock is dropped when the tab is hidden
+  });
+
+  /* Silence whatever is being read. Bumping the token makes its callbacks do nothing. */
+  function memoHalt() {
+    if (memo) memo.token++;
+    clearTimeout(memoTimer);
+    if (synth) synth.cancel();
+  }
+
+  function memoClose() {
+    memoHalt();
+    memo = null;
+    keepAwake(false);
+  }
+
+  function memoStart() {
+    if (!synth) return;
+    memoHalt();
+    memo = {
+      list: DATA[settings.lang].slice(settings.from - 1, settings.to),
+      reps: settings.repeat, i: 0, r: 0, paused: false, done: false, token: 0,
+    };
+    keepAwake(true);
+    render(true);
+    memoPlay();
+  }
+
+  /* Read the current verse once, then count the repetition and carry on. */
+  function memoPlay() {
+    const token = ++memo.token;
+    const v = memo.list[memo.i];
+    // "1:26" is read as a clock time by some voices
+    const lines = (settings.sayRef ? [v.ref.replace(/(\d+):(\d+)/, '$1, $2')] : []).concat(speechChunks(v.text));
+    const voice = pickVoice(settings.lang);
+    let k = 0;
+    const step = () => {
+      if (!memo || memo.token !== token) return;
+      if (k >= lines.length) {
+        memoTimer = setTimeout(() => memoAdvance(token), memo.r + 1 < memo.reps ? 800 : 1600);
+        return;
+      }
+      const u = new SpeechSynthesisUtterance(lines[k++]);
+      u.lang = voice ? voice.lang : settings.lang === 'ta' ? 'ta-IN' : 'en-IN';
+      if (voice) u.voice = voice;
+      u.rate = RATES[settings.rate];
+      u.onend = step;
+      u.onerror = step;
+      memoUtter = u;
+      synth.speak(u);
+    };
+    synth.cancel();
+    memoTimer = setTimeout(step, 80); // Chrome can drop a speak() made straight after cancel()
+  }
+
+  function memoAdvance(token) {
+    if (!memo || memo.token !== token) return;
+    memo.r++;
+    if (memo.r >= memo.reps) {
+      if (memo.i === memo.list.length - 1) {
+        memo.done = true;
+        keepAwake(false);
+        return render();
+      }
+      memo.r = 0;
+      memo.i++;
+    }
+    render();
+    memoPlay();
+  }
+
+  function memoJump(by) {
+    memoHalt();
+    memo.i = Math.min(memo.list.length - 1, Math.max(0, memo.i + by));
+    memo.r = 0;
+    memo.done = false;
+    render();
+    if (!memo.paused) {
+      keepAwake(true);
+      memoPlay();
+    }
+  }
+
+  function syncMemo() {
+    $('#in-range').textContent = L().inRange(settings.to - settings.from + 1);
+    $('#repeat-out').textContent = settings.repeat;
+  }
+
+  function memoHtml() {
+    const s = L();
+    if (memo) {
+      const v = memo.list[memo.i];
+      const n = memo.list.length;
+      const doneReps = memo.done ? memo.reps : memo.r;
+      const dots = Array.from({ length: memo.reps }, (x, j) =>
+        `<i class="${j < doneReps ? 'on' : j === doneReps && !memo.paused ? 'now' : ''}"></i>`).join('');
+      const total = n * memo.reps;
+      const at = memo.i * memo.reps + doneReps;
+      const buttons = memo.done
+        ? `<button type="button" class="button primary" data-act="memoAgain">${esc(s.listenAgain)}</button>`
+        : memo.paused
+          ? `<button type="button" class="button primary" data-act="memoResume">${esc(s.resume)}</button>`
+          : `<button type="button" class="button primary" data-act="memoPause">${esc(s.pause)}</button>`;
+      return `<div class="narrow stack">
+        <div class="card stack">
+          <div class="field">
+            <span>${esc(s.memoAt(memo.i + 1, n, Math.min(doneReps + 1, memo.reps), memo.reps))}</span>
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${at}">
+              <i style="width:${(at / total) * 100}%"></i></div>
+          </div>
+          <div class="stack memo-verse">
+            <h2 class="ref">${v.n}. ${esc(v.ref)}</h2>
+            <p class="verse">${esc(v.text)}</p>
+            <div class="reps" aria-hidden="true">${dots}</div>
+          </div>
+          ${memo.done ? `<div class="flash flash-ok" role="status">${esc(s.memoDone)}</div>` : ''}
+          <div class="button-row">
+            ${buttons}
+            <button type="button" class="button" data-act="memoPrev"${memo.i === 0 ? ' disabled' : ''}>${esc(s.prevVerse)}</button>
+            <button type="button" class="button" data-act="memoNext"${memo.i === n - 1 ? ' disabled' : ''}>${esc(s.nextVerse)}</button>
+            <button type="button" class="button ghost" data-act="memoStop">${esc(s.stop)}</button>
+          </div>
+        </div></div>`;
+    }
+    const all = DATA[settings.lang];
+    const opts = (sel) =>
+      all.map((v) => `<option value="${v.n}"${v.n === sel ? ' selected' : ''}>${v.n}. ${esc(v.ref)}</option>`).join('');
+    const rates = Object.keys(RATES).map((r) =>
+      `<option value="${r}"${settings.rate === r ? ' selected' : ''}>${esc(s.rates[r])}</option>`).join('');
+    // an empty list only means the voices have not loaded yet
+    const noVoice = synth && synth.getVoices().length > 0 && !pickVoice(settings.lang);
+    const warn = !synth ? s.noSpeech : noVoice ? s.noVoice : '';
+    return `<div class="narrow stack">
+    <form class="card stack" id="memo-form">
+      <div class="field">
+        <div class="field-pair">
+          <label class="field"><span>${esc(s.from)}</span><select name="from">${opts(settings.from)}</select></label>
+          <label class="field"><span>${esc(s.to)}</span><select name="to">${opts(settings.to)}</select></label>
+        </div>
+        <small id="in-range"></small>
+      </div>
+      <label class="field">
+        <span class="count-label">${esc(s.repeat)} <output id="repeat-out">${settings.repeat}</output></span>
+        <input type="range" name="repeat" min="1" max="${MAX_REPEAT}" step="1" value="${settings.repeat}">
+        <span class="range-ends"><span>1</span><span>${MAX_REPEAT}</span></span>
+      </label>
+      <label class="field"><span>${esc(s.speed)}</span><select name="rate">${rates}</select></label>
+      <label class="check"><input type="checkbox" name="sayRef"${settings.sayRef ? ' checked' : ''}> <span>${esc(s.sayRef)}</span></label>
+      ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
+      <div class="button-row end"><button class="button primary"${synth ? '' : ' disabled'}>${esc(s.listen)}</button></div>
+    </form></div>`;
+  }
+  // voices arrive late in Chrome; refresh the "no voice" note once they are known
+  if (synth && synth.addEventListener) {
+    synth.addEventListener('voiceschanged', () => { if (view === 'memo' && !memo) render(); });
   }
 
   /* ---- Group events ----------------------------------------------------- */
@@ -404,11 +665,13 @@
     game = null;
     notice = '';
     sendState = '';
+    memoClose(); // leaving the memorize screen stops the voice
     if (!m) {
       event = board = player = null;
-      view = 'setup';
+      view = location.hash === '#memorize' ? 'memo' : 'setup';
       render(true);
-      return void countQuizzes('stats');
+      if (view === 'setup') countQuizzes('stats');
+      return;
     }
     const id = m[2];
     if (!event || event.id !== id || !board) {
@@ -717,6 +980,9 @@
     if (view === 'created') return title(s.created, event.title);
     if (view === 'join') return title(s.group, event.title);
     if (view === 'board') return title(s.board, event.title, `<p class="hero-sub">${esc(eventSummary())}</p>`);
+    if (view === 'memo') {
+      return title(s.church, s.memorize, `<p class="script">${esc(s.memoTag)}</p><p class="hero-sub">${esc(s.memoSub)}</p>`);
+    }
     if (view === 'loading') return title(s.church, s.loading);
     if (view === 'error') return title(s.church, s.title);
     return `<p class="eyebrow">${esc(s.church)}</p>
@@ -739,11 +1005,14 @@
     if (view === 'loading' || view === 'error' || view === 'created') return home;
     const item = (code, label) =>
       `<li><button type="button" data-act="lang" data-lang="${code}" lang="${code}"${settings.lang === code ? ' aria-current="true"' : ''}>${label}</button></li>`;
-    return item('en', 'English') + item('ta', 'தமிழ்');
+    const tabs = `<li><button type="button" data-act="exit"${view === 'memo' ? '' : ' aria-current="page"'}>${esc(s.home)}</button></li>`
+      + link('#memorize', s.memorize, view === 'memo');
+    return tabs + item('en', 'English') + item('ta', 'தமிழ்');
   }
 
   const MAIN = {
     setup: setupHtml,
+    memo: memoHtml,
     created: createdHtml,
     join: joinHtml,
     game: gameHtml,
@@ -756,11 +1025,12 @@
 
   function render(toTop) {
     document.documentElement.lang = lang();
-    document.title = `${event && view !== 'setup' ? event.title : L().title} · ${L().church}`;
+    document.title = `${event && view !== 'setup' ? event.title : view === 'memo' ? L().memorize : L().title} · ${L().church}`;
     $('#nav').innerHTML = navHtml();
     $('#hero').innerHTML = heroHtml();
     $('#main').innerHTML = MAIN[view]();
     if (view === 'setup') syncSetup();
+    if (view === 'memo' && !memo) syncMemo();
     if (toTop && booted) document.querySelector('.navbar').scrollIntoView();
     const next = $('#next');
     if (next) next.focus();
@@ -771,6 +1041,7 @@
     lang(el) {
       settings.lang = el.dataset.lang;
       save();
+      memoClose(); // the verses being read are in the other language
       if (view === 'results') view = 'setup'; // the finished round is in the other language
       render();
     },
@@ -790,6 +1061,26 @@
       else route();
     },
     again: startPractice,
+    memoAgain: memoStart,
+    memoPause() {
+      memoHalt();
+      memo.paused = true;
+      keepAwake(false);
+      render();
+    },
+    memoResume() {
+      // starts the interrupted reading of the verse again from its beginning
+      memo.paused = false;
+      keepAwake(true);
+      render();
+      memoPlay();
+    },
+    memoPrev() { memoJump(-1); },
+    memoNext() { memoJump(1); },
+    memoStop() {
+      memoClose();
+      render(true);
+    },
     async copy(el) {
       const input = $('#link');
       try {
@@ -857,6 +1148,7 @@
     if (busy) return;
     const form = e.target;
     if (form.id === 'setup') startPractice();
+    else if (form.id === 'memo-form') memoStart();
     else if (form.id === 'event-form') createEvent(form.elements.title.value.trim());
     else if (form.id === 'join-form') (player && !player.done ? playEvent() : joinEvent(form.elements.name.value.trim()));
   });
