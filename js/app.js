@@ -496,8 +496,12 @@
       memoUtter = u;
       synth.speak(u);
     };
-    synth.cancel();
-    memoTimer = setTimeout(step, 80); // Chrome can drop a speak() made straight after cancel()
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+      memoTimer = setTimeout(step, 80); // Chrome can drop a speak() made straight after cancel()
+    } else {
+      step(); // straight from the tap: iPhones refuse speech that starts from a timer
+    }
   }
 
   function memoAdvance(token) {
@@ -719,13 +723,25 @@
     </div>`;
   }
 
+  /* This device's secret for one event, made once and kept. A join that has to be
+     retried sends the same key, so the server hands back the entry it already saved. */
+  function joinKey(id) {
+    const at = `${STORE}:key:${id}`;
+    let key = store.get(at, '');
+    if (!key) {
+      key = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+      store.set(at, key);
+    }
+    return key;
+  }
+
   async function joinEvent(name) {
     busy = true;
     notice = '';
     render();
     $('#join-form').elements.name.value = name;
     try {
-      const res = await Api.call('join', { id: event.id, name });
+      const res = await Api.call('join', { id: event.id, name, key: joinKey(event.id) });
       player = { name: res.name, token: res.token, start: Date.now(), answers: [], done: false, sent: false, event };
       savePlayer();
     } catch (e) {

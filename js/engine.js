@@ -157,13 +157,16 @@
     const range = all.filter((v) => v.n >= from && v.n <= to);
     types = types.filter((t) => MAKERS[t]);
     if (!range.length || !types.length) return [];
+    // leave out verses too short for every chosen game; if that leaves nothing, use them anyway
+    const usable = range.filter((v) => types.some((t) => eligible(t, v)));
+    const pool = usable.length ? usable : range;
     const used = new Set();
     const tally = {};
     const out = [];
     let bag = [], last = null;
     while (out.length < count) {
       if (!bag.length) {
-        bag = shuffle(range);
+        bag = shuffle(pool);
         const end = bag.length - 1;
         if (end > 0 && bag[end] === last) [bag[0], bag[end]] = [bag[end], bag[0]];
       }
@@ -173,7 +176,7 @@
       const type =
         order.find((t) => eligible(t, v) && !used.has(v.n + t)) ||
         order.find((t) => eligible(t, v)) ||
-        'ref';
+        order[0]; // never a game type that was not chosen
       used.add(v.n + type);
       tally[type] = (tally[type] || 0) + 1;
       out.push(MAKERS[type](v, all, lang));

@@ -12,11 +12,20 @@ window.Api = {
     return !!CONFIG.API_URL && CONFIG.API_URL.indexOf('PASTE_YOUR') !== 0;
   },
   async call(action, payload) {
-    const res = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(Object.assign({ action }, payload || {})),
-    });
+    // give up after a while, so a stalled connection ends in an error instead of waiting for ever
+    const stop = new AbortController();
+    const timer = setTimeout(() => stop.abort(), CONFIG.TIMEOUT_MS || 45000);
+    let res;
+    try {
+      res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ action }, payload || {})),
+        signal: stop.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!res.ok) throw new Error('Network error (' + res.status + ')');
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'Request failed');

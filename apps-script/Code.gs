@@ -80,7 +80,7 @@ function createEvent(body) {
     var id;
     do { id = randomId(6); } while (taken[id]);
     var seed = Math.floor(Math.random() * 4294967296);
-    sheet('Events').appendRow([id, title, lang, from, to, count, types.join(','), seed, new Date()]);
+    addRow('Events', [id, title, lang, from, to, count, types.join(','), seed, new Date()]);
     return { event: { id: id, title: title, lang: lang, from: from, to: to, count: count, types: types, seed: seed } };
   });
 }
@@ -91,14 +91,23 @@ function join(body) {
   var event = findEvent(body.id);
   var name = clean(body.name, 40);
   if (!name) throw new Error('Name is required');
+  // The browser sends its own secret key and it becomes the token. If the reply
+  // to a join is lost, the retry carries the same key and gets the same entry back
+  // instead of being told the name is taken.
+  var key = /^[a-f0-9-]{32,36}$/.test(String(body.key || '')) ? String(body.key) : '';
   return withLock(function () {
-    var key = name.toLowerCase();
-    var clash = readRows('Results').some(function (r) {
-      return r.EventId === event.id && String(r.Name).toLowerCase() === key;
+    var lower = name.toLowerCase();
+    var mine = null;
+    var clash = false;
+    readRows('Results').forEach(function (r) {
+      if (String(r.EventId) !== event.id) return;
+      if (key && String(r.Token) === key) mine = r;
+      else if (String(r.Name).toLowerCase() === lower) clash = true;
     });
+    if (mine) return { name: String(mine.Name), token: key };
     if (clash) throw new Error('NAME_TAKEN');
-    var token = Utilities.getUuid();
-    sheet('Results').appendRow([event.id, name, token, '', event.count, '', new Date(), '']);
+    var token = key || Utilities.getUuid();
+    addRow('Results', [event.id, name, token, '', event.count, '', new Date(), '']);
     return { name: name, token: token };
   });
 }
@@ -111,7 +120,7 @@ function submit(body) {
     var sh = sheet('Results');
     var values = sh.getDataRange().getValues();
     for (var i = 1; i < values.length; i++) {
-      if (values[i][0] === event.id && values[i][2] === body.token) {
+      if (String(values[i][0]) === event.id && String(values[i][2]) === body.token) {
         // first submission wins; a retry after a dropped connection changes nothing
         if (values[i][7] === '') {
           sh.getRange(i + 1, 4, 1, 3).setValues([[score, event.count, timeMs]]);
@@ -130,7 +139,7 @@ function board(id) {
   var rows = [];
   var playing = 0;
   readRows('Results').forEach(function (r) {
-    if (r.EventId !== id) return;
+    if (String(r.EventId) !== id) return;
     if (r.SubmittedAt === '') { playing++; return; }
     rows.push({ name: String(r.Name), score: Number(r.Score), timeMs: Number(r.TimeMs) });
   });
@@ -159,9 +168,9 @@ function findEvent(id) {
   var rows = readRows('Events');
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
-    if (r.EventId === id) {
+    if (String(r.EventId) === id) {
       return {
-        id: r.EventId, title: String(r.Title), lang: r.Lang,
+        id: String(r.EventId), title: String(r.Title), lang: r.Lang,
         from: Number(r.From), to: Number(r.To), count: Number(r.Count),
         types: String(r.Types).split(','), seed: Number(r.Seed)
       };
@@ -179,6 +188,18 @@ function sheet(name) {
     sh.setFrozenRows(1);
   }
   return sh;
+}
+
+/* Adds a row with its leading id/name cells set to plain text first. Without
+   that the sheet turns number-like text into numbers: the name "007" becomes 7,
+   and an all-digit event id stops matching its own link. Call while holding the lock. */
+var TEXT_COLS = { Events: 2, Results: 3 };
+function addRow(name, row) {
+  var sh = sheet(name);
+  var at = sh.getLastRow() + 1;
+  if (at > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 200);
+  sh.getRange(at, 1, 1, TEXT_COLS[name]).setNumberFormat('@');
+  sh.getRange(at, 1, 1, row.length).setValues([row]);
 }
 
 function readRows(name) {
