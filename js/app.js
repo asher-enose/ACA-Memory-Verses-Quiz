@@ -233,7 +233,16 @@
       memoDone: 'முடிந்தது! மீண்டும் கேளுங்கள், அல்லது நிறுத்திப் புதிய வசனங்களைத் தேர்ந்தெடுங்கள்.',
       listenAgain: 'மீண்டும் கேள்',
       noSpeech: 'இந்த உலாவியால் சத்தமாக வாசிக்க முடியாது. Chrome, Edge அல்லது Safari-ஐப் பயன்படுத்துங்கள்.',
-      noVoice: 'இந்தச் சாதனத்தில் தமிழ்க் குரல் இல்லை, அதனால் வாசிப்பு கேட்காமலோ தவறாகவோ இருக்கலாம். Android-இல்: Settings › Text-to-speech › Google › Install voice data என்பதில் தமிழைச் சேர்க்கவும்.',
+      // always shown on the Tamil memorize screen: a missing Tamil voice cannot be detected reliably
+      voiceHelp: {
+        title: 'தமிழ் கேட்கவில்லையா? எண்கள் மட்டும் கேட்கிறதா?',
+        intro: 'அப்படியானால் உங்கள் சாதனத்தில் தமிழ்க் குரல் இல்லை. ஒருமுறை இதைச் செய்யுங்கள்:',
+        steps: [
+          'Android: Settings › System › Languages & input › Text-to-speech output › “Speech Services by Google” அருகிலுள்ள ⚙ › Install voice data › தமிழ். பிறகு இந்தப் பக்கத்தை மீண்டும் திறக்கவும்.',
+          'Windows கணினி: Chrome-க்குப் பதிலாக Edge உலாவியைப் பயன்படுத்துங்கள்.',
+          'iPhone: Settings › Accessibility › Spoken Content › Voices › Tamil என்பதில் ஒரு குரலைப் பதிவிறக்கவும்.',
+        ],
+      },
       types: {
         fill: ['விடுபட்ட சொல்', 'விடுபட்ட சொல்லைத் தேர்ந்தெடுங்கள்'],
         ref: ['வசனம் எங்கே?', 'வசனத்திற்குரிய முகவரியைத் தேர்ந்தெடுங்கள்'],
@@ -580,7 +589,10 @@
       `<option value="${r}"${settings.rate === r ? ' selected' : ''}>${esc(s.rates[r])}</option>`).join('');
     // an empty list only means the voices have not loaded yet
     const noVoice = synth && synth.getVoices().length > 0 && !pickVoice(settings.lang);
-    const warn = !synth ? s.noSpeech : noVoice ? s.noVoice : '';
+    const warn = !synth ? s.noSpeech : noVoice && s.noVoice ? s.noVoice : '';
+    const help = synth && s.voiceHelp ? `<div class="flash flash-info">
+        <p><strong>${esc(s.voiceHelp.title)}</strong></p><p>${esc(s.voiceHelp.intro)}</p>
+        <ul class="bullets">${s.voiceHelp.steps.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>` : '';
     return `<div class="narrow stack">
     <form class="card stack" id="memo-form">
       <div class="field">
@@ -599,7 +611,7 @@
       <label class="check"><input type="checkbox" name="sayRef"${settings.sayRef ? ' checked' : ''}> <span>${esc(s.sayRef)}</span></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
       <div class="button-row end"><button class="button primary"${synth ? '' : ' disabled'}>${esc(s.listen)}</button></div>
-    </form></div>`;
+    </form>${help}</div>`;
   }
   // voices arrive late in Chrome; refresh the "no voice" note once they are known
   if (synth && synth.addEventListener) {
