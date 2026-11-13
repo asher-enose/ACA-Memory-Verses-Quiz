@@ -111,12 +111,13 @@
       // memorize assistant
       memorize: 'Memorize',
       memoTag: 'Listen & repeat',
-      memoSub: 'Choose the verses and how many times each one is read aloud. Verses that follow on from each other are read together as one passage. Say it along with the voice.',
+      memoSub: 'Choose the verses and how many times each one is read aloud. Verses that follow on from each other can be read together as one passage. Say it along with the voice.',
       repeat: 'Times to repeat each verse or passage',
       span: (a, b) => `${a} to ${b}`, // Genesis 1:26 to 28
       inPassages: (n) => (n === 1 ? 'read as 1 part' : `read as ${n} parts`),
       speed: 'Reading speed',
       rates: { slow: 'Slow', normal: 'Normal', fast: 'Fast' },
+      group: 'Read verses that follow on as one passage',
       refMode: 'Read the reference',
       refModes: { all: 'Every time', first: 'First time only', off: 'Off' },
       listen: 'Start listening',
@@ -223,12 +224,13 @@
       loadFail: 'நிகழ்வை ஏற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்க்கவும்.',
       memorize: 'மனப்பாடம்',
       memoTag: 'கேட்டுத் திரும்பச் சொல்லுங்கள்',
-      memoSub: 'வசனங்களையும், ஒவ்வொன்றும் எத்தனை முறை வாசிக்கப்பட வேண்டும் என்பதையும் தேர்ந்தெடுங்கள். தொடர்ச்சியாக வரும் வசனங்கள் ஒரே பகுதியாகச் சேர்த்து வாசிக்கப்படும். குரலுடன் சேர்ந்து சொல்லுங்கள்.',
+      memoSub: 'வசனங்களையும், ஒவ்வொன்றும் எத்தனை முறை வாசிக்கப்பட வேண்டும் என்பதையும் தேர்ந்தெடுங்கள். தொடர்ச்சியாக வரும் வசனங்களை ஒரே பகுதியாகச் சேர்த்து வாசிக்கலாம். குரலுடன் சேர்ந்து சொல்லுங்கள்.',
       repeat: 'ஒவ்வொரு வசனமும் அல்லது பகுதியும் எத்தனை முறை',
       span: (a, b) => `${a} முதல் ${b} வரை`,
       inPassages: (n) => `${n} பகுதிகளாக வாசிக்கப்படும்`,
       speed: 'வாசிக்கும் வேகம்',
       rates: { slow: 'மெதுவாக', normal: 'சாதாரணம்', fast: 'வேகமாக' },
+      group: 'தொடர்ச்சியான வசனங்களை ஒரே பகுதியாக வாசிக்கவும்',
       refMode: 'வசன முகவரியை வாசிக்க',
       refModes: { all: 'ஒவ்வொரு முறையும்', first: 'முதல் முறை மட்டும்', off: 'வேண்டாம்' },
       listen: 'கேட்கத் தொடங்கு',
@@ -276,7 +278,7 @@
   const REF_MODES = ['all', 'first', 'off']; // read the reference: every repetition, the first only, never
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
-    repeat: 3, rate: 'normal', refMode: 'all', // memorize assistant
+    repeat: 3, rate: 'normal', refMode: 'all', group: true, // memorize assistant
   };
   {
     const saved = store.get(STORE, {});
@@ -287,6 +289,7 @@
     settings.count = int(saved.count, 1, MAXQ, 10);
     settings.repeat = int(saved.repeat, 1, MAX_REPEAT, 3);
     if (saved.rate in RATES) settings.rate = saved.rate;
+    if (typeof saved.group === 'boolean') settings.group = saved.group;
     if (REF_MODES.includes(saved.refMode)) settings.refMode = saved.refMode;
     else if (saved.sayRef === false) settings.refMode = 'off'; // setting saved by the older on/off tick box
     if (Array.isArray(saved.types)) {
@@ -407,6 +410,8 @@
       settings.repeat = Math.min(MAX_REPEAT, Math.max(1, Number(e.target.value) || 1));
     } else if (name === 'rate') {
       if (e.target.value in RATES) settings.rate = e.target.value;
+    } else if (name === 'group') {
+      settings.group = e.target.checked;
     } else if (name === 'refMode') {
       if (REF_MODES.includes(e.target.value)) settings.refMode = e.target.value;
     }
@@ -445,7 +450,13 @@
     return m ? { book: m[1], chapter: Number(m[2]), verse: Number(m[3]), label: m[3] + m[4] } : null;
   }
 
-  /* Group verses that follow on from each other into passages: { ref, verses, labels }. */
+  /* The chosen range as passages: { ref, verses, labels }. With grouping on, verses that
+     follow on from each other share a passage; with it off, every verse is its own. */
+  function memoParts() {
+    const list = DATA[settings.lang].slice(settings.from - 1, settings.to);
+    return settings.group ? passages(list, settings.lang) : list.map((v) => ({ ref: v.ref, verses: [v], labels: [''] }));
+  }
+
   function passages(list, code) {
     const out = [];
     let prev = null;
@@ -516,7 +527,7 @@
     if (!synth) return;
     memoHalt();
     memo = {
-      list: passages(DATA[settings.lang].slice(settings.from - 1, settings.to), settings.lang),
+      list: memoParts(),
       reps: settings.repeat, i: 0, r: 0, k: -1, paused: false, done: false, token: 0,
     };
     keepAwake(true);
@@ -604,8 +615,7 @@
   }
 
   function syncMemo() {
-    const parts = passages(DATA[settings.lang].slice(settings.from - 1, settings.to), settings.lang).length;
-    $('#in-range').textContent = `${L().inRange(settings.to - settings.from + 1)}, ${L().inPassages(parts)}`;
+    $('#in-range').textContent = `${L().inRange(settings.to - settings.from + 1)}, ${L().inPassages(memoParts().length)}`;
     $('#repeat-out').textContent = settings.repeat;
   }
 
@@ -675,6 +685,7 @@
         <span class="range-ends"><span>1</span><span>${MAX_REPEAT}</span></span>
       </label>
       <label class="field"><span>${esc(s.speed)}</span><select name="rate">${rates}</select></label>
+      <label class="check"><input type="checkbox" name="group"${settings.group ? ' checked' : ''}> <span>${esc(s.group)}</span></label>
       <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
         `<option value="${m}"${settings.refMode === m ? ' selected' : ''}>${esc(s.refModes[m])}</option>`).join('')}</select></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
@@ -1010,7 +1021,7 @@
         <h2>${esc(q.correct ? s.correct : s.wrong)}</h2>
         ${q.type === 'flash' ? '' : `<p><strong>${esc(q.v.ref)}</strong> — ${esc(q.v.text)}</p>`}
       </div>
-      <div class="button-row end"><button type="button" class="button primary" id="next" data-act="next">${esc(last ? s.finish : s.next)}</button></div>`;
+      <div class="button-row end next-bar"><button type="button" class="button primary" id="next" data-act="next">${esc(last ? s.finish : s.next)}</button></div>`;
     return `<div class="narrow stack">
       <div class="card stack"><p class="eyebrow">${esc(s.ask[q.type])}</p>${BODY[q.type](q)}</div>
       ${feedback}
@@ -1136,7 +1147,7 @@
     if (view === 'memo' && !memo) syncMemo();
     if (toTop && booted) document.querySelector('.navbar').scrollIntoView();
     const next = $('#next');
-    if (next) next.focus();
+    if (next) next.focus({ preventScroll: true }); // Enter moves on, but the page must not jump when an answer is picked
   }
 
   /* ---- Events ----------------------------------------------------------- */

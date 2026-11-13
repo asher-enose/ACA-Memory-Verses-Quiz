@@ -36,6 +36,9 @@ passage and the whole passage is repeated together: Genesis 1:26, 1:27 and 1:28
 are read as "Genesis 1:26 to 28", that many times, before moving on. A verse on
 its own is read by itself. The verse being read is highlighted.
 
+Untick **Read verses that follow on as one passage** to have every verse read and
+repeated on its own instead.
+
 Pause, Resume, Previous, Next and Stop are on the player. Resume picks up at the
 start of the verse that was interrupted.
 
