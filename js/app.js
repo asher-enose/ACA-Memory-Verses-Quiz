@@ -544,12 +544,19 @@
   const SILENCE = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
   const pad3 = (n) => String(n).padStart(3, '0');
   const has = (kind, key) => !!(AUDIO[settings.lang] && AUDIO[settings.lang][kind].includes(key));
-  const verseSrc = (v) => (has('verses', v.n) ? `assets/audio/${settings.lang}/v${pad3(v.n)}.mp3` : '');
+  const clip = (name) => `assets/audio/${settings.lang}/${name}.mp3`;
+  const verseSrc = (v) => (has('verses', v.n) ? clip(`v${pad3(v.n)}`) : '');
+  /* The clips that make up a reference, or [] if any is missing. One verse: its own clip.
+     A passage is stitched: first reference + "to" + last verse number (+ closing word),
+     e.g. "Genesis 1, 26" "to" "28", so no clip is needed per range. */
   function refSrc(p) {
+    const list = AUDIO[settings.lang];
     const first = p.verses[0].n;
-    const last = p.verses[p.verses.length - 1].n;
-    if (!has('refs', first === last ? `${first}` : `${first}-${last}`)) return '';
-    return `assets/audio/${settings.lang}/r${pad3(first)}${first === last ? '' : `-${pad3(last)}`}.mp3`;
+    if (!has('refs', first)) return [];
+    if (p.verses.length === 1) return [clip(`r${pad3(first)}`)];
+    const last = parseInt(p.labels[p.labels.length - 1], 10);
+    if (!list.to || !has('nums', last)) return [];
+    return [clip(`r${pad3(first)}`), clip('to'), clip(`n${pad3(last)}`)].concat(list.end ? [clip('end')] : []);
   }
   const anyAudio = () => !!(AUDIO[settings.lang] && AUDIO[settings.lang].verses.length);
 
@@ -596,11 +603,18 @@
     const sayRef = start === 0 && (settings.refMode === 'all' || (settings.refMode === 'first' && memo.r === 0));
     // Each line is one thing to play: { k, src } for an audio file (with `texts` to fall
     // back on), or { k, text } for the phone's voice. k = verse index, -1 for the reference.
+    // A reference may be several files in a row (see refSrc).
     const spoken = (texts, k) => texts.map((text) => ({ text, k }));
-    const add = (src, texts, k) => (src ? lines.push({ src, texts, k }) : lines.push(...spoken(texts, k)));
+    const add = (src, texts, k) => (src ? lines.push({ src, texts, k, rest: 0 }) : lines.push(...spoken(texts, k)));
     const lines = [];
-    // "1:26" is read as a clock time by some voices
-    if (sayRef) add(refSrc(p), [p.ref.replace(/(\d+):(\d+)/, '$1, $2')], -1);
+    if (sayRef) {
+      const refText = [p.ref.replace(/(\d+):(\d+)/, '$1, $2')]; // "1:26" is read as a clock time by some voices
+      const pieces = refSrc(p);
+      // `rest` = pieces of this reference still to come: if one fails, the phone's voice
+      // reads the whole reference once and those are dropped
+      if (pieces.length) pieces.forEach((src, j) => lines.push({ src, texts: refText, k: -1, rest: pieces.length - 1 - j }));
+      else lines.push(...spoken(refText, -1));
+    }
     p.verses.slice(start).forEach((v, j) => add(verseSrc(v), speechChunks(v.text), start + j));
     const voice = pickVoice(settings.lang);
     let n = 0;
@@ -621,7 +635,7 @@
         const fallBack = () => {
           if (failed || !memo || memo.token !== token) return;
           failed = true;
-          lines.splice(n, 0, ...spoken(line.texts, line.k));
+          lines.splice(n, line.rest, ...spoken(line.texts, line.k));
           step();
         };
         memoVoice(true);

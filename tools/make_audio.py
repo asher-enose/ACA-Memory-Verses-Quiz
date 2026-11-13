@@ -2,35 +2,46 @@
 """Make the audio files the Memorize screen plays instead of the phone's own voice.
 
     pip install --user edge-tts
-    python3 tools/make_audio.py 1-5          # verses 1 to 5, both languages
-    python3 tools/make_audio.py 1-5 20 31-36 # several ranges
+    python3 tools/make_audio.py 1-190        # every verse, both languages
+    python3 tools/make_audio.py 1-5 20 31-36 # or just some
     python3 tools/make_audio.py 1-5 --force  # make them again, replacing the files
 
 For each verse number N and each language it writes, under assets/audio/<lang>/:
-    vNNN.mp3        the verse text
-    rNNN.mp3        its reference, e.g. "Genesis 1, 26"
-    rAAA-BBB.mp3    a passage reference, e.g. "Genesis 1, 26 to 28", for every run of
-                    verses that follow on from each other and all have audio
+    vNNN.mp3   the verse text
+    rNNN.mp3   its reference, e.g. "Genesis 1, 26"
+    nNNN.mp3   a bare verse number, e.g. "28", for every verse that can end a passage
+    to.mp3     the joining word ("to" / "முதல்"), and end.mp3 where the language needs a
+               closing word ("வரை")
 
-Then it rewrites js/audio.js, the list of what exists, from the files on disk. The app
-plays a file when it is listed there and falls back to the phone's voice when it is not.
+A passage reference is not a file of its own: the app plays rNNN + to + nNNN (+ end),
+so "Genesis 1, 26" "to" "28" covers any range without a clip per range.
+
+Then it rewrites js/audio.js, the list of what exists, from the files on disk, and changes
+the ?v= value in index.html so browsers fetch the new list. The app plays a file when it
+is listed and falls back to the phone's voice when it is not.
 
 The voices are Microsoft's online neural voices (through the edge-tts package), so this
 needs internet and sends the verse text to that service. Files that already exist are
-left alone unless --force is given.
+skipped unless --force is given, so a run that stops can be continued by running the same
+command again. To redo one clip, delete it and run again.
 """
 import asyncio
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 import edge_tts
 
 ROOT = Path(__file__).resolve().parent.parent
 VOICES = {'en': 'en-IN-NeerjaNeural', 'ta': 'ta-IN-PallaviNeural'}
-SPAN = {'en': '{a} to {b}', 'ta': '{a} முதல் {b} வரை'}  # same wording as STR.span in js/app.js
+# The words around a passage's last verse number: "... to 28" / "... முதல் 28 வரை".
+# Keep in step with STR.span in js/app.js.
+JOIN = {'en': {'to': 'to'}, 'ta': {'to': 'முதல்', 'end': 'வரை'}}
 REF = re.compile(r'^(.*?)\s+(\d+):(\d+)([a-z]?)$')
+TRIES = 3
+done = 0
 
 
 def load_verses():
@@ -65,59 +76,76 @@ def parse_numbers(args, total):
 
 
 async def say(text, voice, path, force):
+    """Write one clip. Returns 1 if a file was made, 0 if it was already there."""
+    global done
     if path.exists() and not force:
-        return False
-    await edge_tts.Communicate(text, voice).save(str(path))
-    if path.stat().st_size < 1000:
-        sys.exit('The speech service returned an empty file for %s' % path.name)
-    return True
+        return 0
+    for attempt in range(1, TRIES + 1):
+        try:
+            await edge_tts.Communicate(text, voice).save(str(path))
+            if path.stat().st_size >= 1000:
+                break
+            raise RuntimeError('empty file')
+        except Exception as err:  # network hiccup: wait a little and try again
+            path.unlink(missing_ok=True)
+            if attempt == TRIES:
+                sys.exit('Could not make %s (%s). Run the same command again to continue.' % (path.name, err))
+            await asyncio.sleep(2 * attempt)
+    done += 1
+    if done % 20 == 0:
+        print('  %d clips made...' % done, flush=True)
+    return 1
 
 
 async def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     force = '--force' in sys.argv
     verses = load_verses()
-    total = len(verses['en'])
     if not args:
         sys.exit(__doc__)
-    wanted = parse_numbers(args, total)
+    wanted = parse_numbers(args, len(verses['en']))
     made = 0
 
     for lang, voice in VOICES.items():
         folder = ROOT / 'assets' / 'audio' / lang
         folder.mkdir(parents=True, exist_ok=True)
+        for old in folder.glob('r*-*.mp3'):  # one-clip-per-range files from the first trial
+            old.unlink()
         refs = [r for r, _ in verses[lang]]
+        print('%s (%s)' % (lang, voice), flush=True)
 
+        for word, text in JOIN[lang].items():
+            made += await say(text, voice, folder / (word + '.mp3'), force)
         for n in wanted:
             ref, text = verses[lang][n - 1]
             made += await say(text, voice, folder / ('v%03d.mp3' % n), force)
             made += await say(spoken(ref), voice, folder / ('r%03d.mp3' % n), force)
-
-        # passage references: every stretch of 2+ consecutive verses that all have audio
-        have = sorted(int(p.stem[1:]) for p in folder.glob('v[0-9][0-9][0-9].mp3'))
-        for first in have:
-            last = first
-            while last + 1 in have and follows(refs[last - 1], refs[last]):
-                last += 1
-                label = ''.join(REF.match(refs[last - 1]).group(3, 4))
-                text = spoken(SPAN[lang].format(a=refs[first - 1], b=label))
-                made += await say(text, voice, folder / ('r%03d-%03d.mp3' % (first, last)), force)
+            if n > 1 and follows(refs[n - 2], ref):  # this verse can be the last of a passage
+                number = int(REF.match(ref).group(3))
+                made += await say(str(number), voice, folder / ('n%03d.mp3' % number), force)
 
     # the manifest lists what is on disk, so deleting a file and re-running keeps it honest
     manifest = {}
     for lang in VOICES:
         folder = ROOT / 'assets' / 'audio' / lang
+        numbered = lambda kind: sorted(int(p.stem[1:]) for p in folder.glob(kind + '[0-9][0-9][0-9].mp3'))
         manifest[lang] = {
-            'verses': sorted(int(p.stem[1:]) for p in folder.glob('v[0-9][0-9][0-9].mp3')),
-            'refs': sorted(
-                ('-'.join(str(int(x)) for x in p.stem[1:].split('-')) for p in folder.glob('r*.mp3')),
-                key=lambda s: [int(x) for x in s.split('-')]),
+            'verses': numbered('v'), 'refs': numbered('r'), 'nums': numbered('n'),
+            'to': (folder / 'to.mp3').exists(), 'end': (folder / 'end.mp3').exists(),
         }
     (ROOT / 'js' / 'audio.js').write_text(
-        '/* Written by tools/make_audio.py: the verses and references that have an audio file\n'
-        '   in assets/audio/<lang>/. Anything not listed is read with the phone\'s own voice. */\n'
+        '/* Written by tools/make_audio.py: what has an audio file in assets/audio/<lang>/.\n'
+        '   verses = vNNN.mp3, refs = rNNN.mp3, nums = nNNN.mp3 (bare verse numbers), plus the\n'
+        '   joining words to.mp3 / end.mp3. Anything not listed is read by the phone\'s own voice. */\n'
         'window.AUDIO = ' + json.dumps(manifest, separators=(',', ':')) + ';\n', encoding='utf-8')
-    print('made %d new files; manifest: %s' % (made, {k: len(v['verses']) for k, v in manifest.items()}))
+
+    # a new ?v= makes browsers fetch the new list instead of a saved copy
+    index = ROOT / 'index.html'
+    html, count = re.subn(r'\?v=[0-9a-z]+"', '?v=%s"' % time.strftime('%Y%m%d%H%M'), index.read_text(encoding='utf-8'))
+    if count:
+        index.write_text(html, encoding='utf-8')
+
+    print('Done: %d new clips. Verses with audio: %s' % (made, {k: len(v['verses']) for k, v in manifest.items()}))
 
 
 asyncio.run(main())

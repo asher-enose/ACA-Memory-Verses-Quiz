@@ -49,13 +49,22 @@ sound the same on every device. This is on trial for verses 1–5 in both langua
 other verses are still read by the phone's own voice. The player shows "Recorded voice"
 or "Phone's voice" so you can tell which you are hearing.
 
-The files live in `assets/audio/<language>/` and are listed in `js/audio.js`. To make
-more (needs internet; it sends the verse text to Microsoft's online voices):
+The files live in `assets/audio/<language>/` and are listed in `js/audio.js`. A passage
+reference is stitched from small clips ("Genesis 1, 26" + "to" + "28"), so there is no
+clip per range. To make the audio for every verse (needs internet; it sends the verse
+text to Microsoft's online voices; takes roughly 15–25 minutes):
 
 ```
 pip install --user edge-tts
-python3 tools/make_audio.py 6-20
+python3 tools/make_audio.py 1-190
+git add -A
+git commit -m "Add recorded audio for all verses"
+git push
 ```
+
+If it stops part way, run the same command again; it carries on where it left off. To
+redo a clip that sounds wrong, delete that file and run it again. The script also updates
+the `?v=` value in `index.html` for you.
 
 Where there is no file, it uses the voice built into the browser, in the language chosen in the menu bar,
 so nothing is downloaded. Tamil needs a Tamil voice on the device; the screen says
