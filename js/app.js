@@ -80,6 +80,7 @@
       created: 'Event created',
       shareHint: 'Share this link with your group',
       shareText: (t) => `Join the memory verse quiz “${t}”:`,
+      invite: 'Send this quiz to others',
       copy: 'Copy link',
       copied: 'Copied!',
       share: 'Share',
@@ -196,6 +197,7 @@
       created: 'நிகழ்வு உருவாக்கப்பட்டது',
       shareHint: 'இந்த இணைப்பை உங்கள் குழுவுடன் பகிருங்கள்',
       shareText: (t) => `“${t}” மனப்பாட வசன வினாடி வினாவில் சேருங்கள்:`,
+      invite: 'இந்த வினாடி வினாவை மற்றவர்களுக்கு அனுப்புங்கள்',
       copy: 'இணைப்பை நகலெடு',
       copied: 'நகலெடுக்கப்பட்டது!',
       share: 'பகிர்',
@@ -732,21 +734,28 @@
     if (view === 'setup') keepTitle();
   }
 
-  function createdHtml() {
+  /* The event's quiz link with copy / share / WhatsApp. Shown when an event is created,
+     and again on its leaderboard and result pages so it can be sent on later. */
+  function shareHtml(heading, primary) {
     const s = L();
     const url = eventUrl(event.id);
     const text = `${s.shareText(event.title)} ${url}`;
-    return `<div class="narrow stack">
-      <div class="card stack">
-        <div class="field"><span>${esc(s.shareHint)}</span>
+    return `<div class="card stack">
+        <div class="field"><span>${esc(heading)}</span>
           <input type="text" id="link" readonly value="${esc(url)}" onfocus="this.select()"></div>
         <div class="button-row">
-          <button type="button" class="button primary" data-act="copy">${esc(s.copy)}</button>
+          <button type="button" class="button${primary ? ' primary' : ''}" data-act="copy">${esc(s.copy)}</button>
           ${navigator.share ? `<button type="button" class="button" data-act="share">${esc(s.share)}</button>` : ''}
           <a class="button" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">WhatsApp</a>
         </div>
         <p>${esc(eventSummary())}</p>
-      </div>
+      </div>`;
+  }
+
+  function createdHtml() {
+    const s = L();
+    return `<div class="narrow stack">
+      ${shareHtml(s.shareHint, true)}
       <div class="button-row">
         <a class="button ghost" href="#e=${esc(event.id)}">${esc(s.openQuiz)}</a>
         <a class="button ghost" href="#board=${esc(event.id)}">${esc(s.board)}</a>
@@ -1079,6 +1088,7 @@
     return `<div class="narrow stack">${status}
       <div class="flash flash-ok" role="status"><p>${esc(s.doneNote)}</p></div>
       <div class="button-row"><a class="button primary" href="#board=${esc(event.id)}">${esc(s.board)}</a></div>
+      ${shareHtml(s.invite)}
       ${qs ? reviewHtml(qs) : ''}</div>`;
   }
 
@@ -1153,7 +1163,8 @@
     game: gameHtml,
     results: resultsHtml,
     board: () => `<div class="narrow stack">${boardHtml()}
-      ${player ? '' : `<div class="button-row end"><a class="button primary" href="#e=${esc(event.id)}">${esc(L().openQuiz)}</a></div>`}</div>`,
+      ${player ? '' : `<div class="button-row end"><a class="button primary" href="#e=${esc(event.id)}">${esc(L().openQuiz)}</a></div>`}
+      ${shareHtml(L().invite)}</div>`,
     loading: () => '',
     error: () => `<div class="narrow"><div class="flash flash-error" role="alert">${esc(errorText)}</div></div>`,
   };
