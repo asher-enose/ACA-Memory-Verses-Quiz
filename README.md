@@ -26,12 +26,18 @@ split point, the scrambled words and the wrong answers are all picked at random.
 
 **Memorize** in the menu bar opens a listening screen:
 
-1. Choose the verse range and how many times each verse is repeated (1–20).
-2. Optionally change the reading speed, or turn off reading the reference.
-3. Press **Start listening**. Verse 1 is read that many times, then verse 2, and so on.
+1. Choose the verse range and how many times each verse or passage is repeated (1–20).
+2. Optionally change the reading speed, and choose when the reference is read:
+   every time, the first time only, or off.
+3. Press **Start listening**.
 
-Pause, Resume, Previous verse, Next verse and Stop are on the player. Resume starts
-the interrupted reading of the verse again from its beginning.
+Verses that follow on from each other in the same chapter are grouped into one
+passage and the whole passage is repeated together: Genesis 1:26, 1:27 and 1:28
+are read as "Genesis 1:26 to 28", that many times, before moving on. A verse on
+its own is read by itself. The verse being read is highlighted.
+
+Pause, Resume, Previous, Next and Stop are on the player. Resume picks up at the
+start of the verse that was interrupted.
 
 It uses the voice built into the browser, in the language chosen in the menu bar,
 so nothing is downloaded. Tamil needs a Tamil voice on the device; the screen says
@@ -52,7 +58,8 @@ On the home page, under the practice settings, there is a **Group quiz** card:
 
 Good to know:
 
-- An event is played in the language that was selected when it was created.
+- Each person picks English or Tamil on the screen where they enter their name.
+  Both languages get the same verses and the same game types in the same order.
 - Flash card is self-marked, so it is not used in events.
 - One go per name. A name already used in the event is refused, and a finished
   player who reopens the link sees their result, not the quiz.

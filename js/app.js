@@ -68,7 +68,7 @@
       review: 'Review',
       // group events
       group: 'Group quiz',
-      groupSub: 'Create an event from the settings above and share its link. Everyone who opens it gets the same questions, and their scores go on one leaderboard.',
+      groupSub: 'Create an event from the settings above and share its link. Everyone who opens it gets the same questions, in English or Tamil as they choose, and their scores go on one leaderboard.',
       flashNote: 'Flash card is self-marked, so it is left out of group events.',
       needEventType: 'Tick at least one game type other than Flash card.',
       notConfigured: 'Group events need a one-time Google Sheet setup. See README.md.',
@@ -89,9 +89,10 @@
       board: 'Leaderboard',
       home: 'Practice',
       summary: (n, a, b) => `${n} questions · ${a} – ${b}`,
+      language: 'Language',
       yourName: 'Your name',
       join: 'Start quiz',
-      resume: (name) => `Continue as ${name}`,
+      resumeAs: (name) => `Continue as ${name}`,
       nameTaken: 'That name is already used in this event. Add an initial or surname.',
       rule: 'Ranked by score, then by fastest time. The clock starts when you press Start.',
       name: 'Name',
@@ -110,18 +111,21 @@
       // memorize assistant
       memorize: 'Memorize',
       memoTag: 'Listen & repeat',
-      memoSub: 'Choose the verses and how many times each one is read aloud. Say it along with the voice.',
-      repeat: 'Times to repeat each verse',
+      memoSub: 'Choose the verses and how many times each one is read aloud. Verses that follow on from each other are read together as one passage. Say it along with the voice.',
+      repeat: 'Times to repeat each verse or passage',
+      span: (a, b) => `${a} to ${b}`, // Genesis 1:26 to 28
+      inPassages: (n) => (n === 1 ? 'read as 1 part' : `read as ${n} parts`),
       speed: 'Reading speed',
       rates: { slow: 'Slow', normal: 'Normal', fast: 'Fast' },
-      sayRef: 'Read the reference too',
+      refMode: 'Read the reference',
+      refModes: { all: 'Every time', first: 'First time only', off: 'Off' },
       listen: 'Start listening',
       pause: 'Pause',
       resume: 'Resume',
       stop: 'Stop',
-      prevVerse: '← Previous verse',
-      nextVerse: 'Next verse →',
-      memoAt: (i, n, r, m) => `Verse ${i} of ${n} · Time ${r} of ${m}`,
+      prevVerse: '← Previous',
+      nextVerse: 'Next →',
+      memoAt: (i, n, r, m) => `Part ${i} of ${n} · Time ${r} of ${m}`,
       memoDone: 'All done! Listen again, or stop and pick new verses.',
       listenAgain: 'Listen again',
       noSpeech: 'This browser cannot read aloud. Try Chrome, Edge or Safari.',
@@ -177,7 +181,7 @@
       change: 'அமைப்புகளை மாற்று',
       review: 'மீள்பார்வை',
       group: 'குழு வினாடி வினா',
-      groupSub: 'மேலே உள்ள அமைப்புகளைக் கொண்டு ஒரு நிகழ்வை உருவாக்கி, அதன் இணைப்பைப் பகிருங்கள். இணைப்பைத் திறக்கும் அனைவருக்கும் ஒரே கேள்விகள்; அனைவரின் மதிப்பெண்களும் ஒரே தரவரிசைப் பட்டியலில் வரும்.',
+      groupSub: 'மேலே உள்ள அமைப்புகளைக் கொண்டு ஒரு நிகழ்வை உருவாக்கி, அதன் இணைப்பைப் பகிருங்கள். இணைப்பைத் திறக்கும் அனைவருக்கும் ஒரே கேள்விகள் (ஆங்கிலம் அல்லது தமிழ், அவரவர் விருப்பப்படி); அனைவரின் மதிப்பெண்களும் ஒரே தரவரிசைப் பட்டியலில் வரும்.',
       flashNote: 'நினைவு அட்டை சுய மதிப்பீடு என்பதால் குழு நிகழ்வுகளில் சேர்க்கப்படாது.',
       needEventType: 'நினைவு அட்டை தவிர குறைந்தது ஒரு விளையாட்டு வகையைத் தேர்ந்தெடுங்கள்.',
       notConfigured: 'குழு நிகழ்வுகளுக்கு ஒருமுறை Google Sheet அமைப்பு தேவை. README.md பார்க்கவும்.',
@@ -198,9 +202,10 @@
       board: 'தரவரிசைப் பட்டியல்',
       home: 'பயிற்சி',
       summary: (n, a, b) => `${n} கேள்விகள் · ${a} – ${b}`,
+      language: 'மொழி',
       yourName: 'உங்கள் பெயர்',
       join: 'தொடங்கு',
-      resume: (name) => `${name} ஆகத் தொடரவும்`,
+      resumeAs: (name) => `${name} ஆகத் தொடரவும்`,
       nameTaken: 'இந்தப் பெயர் இந்த நிகழ்வில் ஏற்கனவே பயன்படுத்தப்பட்டுள்ளது. முதலெழுத்தையோ குடும்பப் பெயரையோ சேர்க்கவும்.',
       rule: 'மதிப்பெண், பின்னர் குறைந்த நேரம் அடிப்படையில் தரவரிசை. தொடங்கு என்பதை அழுத்தியதும் நேரம் தொடங்கும்.',
       name: 'பெயர்',
@@ -218,18 +223,21 @@
       loadFail: 'நிகழ்வை ஏற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்க்கவும்.',
       memorize: 'மனப்பாடம்',
       memoTag: 'கேட்டுத் திரும்பச் சொல்லுங்கள்',
-      memoSub: 'வசனங்களையும், ஒவ்வொரு வசனமும் எத்தனை முறை வாசிக்கப்பட வேண்டும் என்பதையும் தேர்ந்தெடுங்கள். குரலுடன் சேர்ந்து சொல்லுங்கள்.',
-      repeat: 'ஒவ்வொரு வசனமும் எத்தனை முறை',
+      memoSub: 'வசனங்களையும், ஒவ்வொன்றும் எத்தனை முறை வாசிக்கப்பட வேண்டும் என்பதையும் தேர்ந்தெடுங்கள். தொடர்ச்சியாக வரும் வசனங்கள் ஒரே பகுதியாகச் சேர்த்து வாசிக்கப்படும். குரலுடன் சேர்ந்து சொல்லுங்கள்.',
+      repeat: 'ஒவ்வொரு வசனமும் அல்லது பகுதியும் எத்தனை முறை',
+      span: (a, b) => `${a} முதல் ${b} வரை`,
+      inPassages: (n) => `${n} பகுதிகளாக வாசிக்கப்படும்`,
       speed: 'வாசிக்கும் வேகம்',
       rates: { slow: 'மெதுவாக', normal: 'சாதாரணம்', fast: 'வேகமாக' },
-      sayRef: 'வசன முகவரியையும் வாசிக்கவும்',
+      refMode: 'வசன முகவரியை வாசிக்க',
+      refModes: { all: 'ஒவ்வொரு முறையும்', first: 'முதல் முறை மட்டும்', off: 'வேண்டாம்' },
       listen: 'கேட்கத் தொடங்கு',
       pause: 'இடைநிறுத்து',
       resume: 'தொடர்',
       stop: 'நிறுத்து',
-      prevVerse: '← முந்தைய வசனம்',
-      nextVerse: 'அடுத்த வசனம் →',
-      memoAt: (i, n, r, m) => `வசனம் ${i} / ${n} · ${r} / ${m} முறை`,
+      prevVerse: '← முந்தையது',
+      nextVerse: 'அடுத்தது →',
+      memoAt: (i, n, r, m) => `பகுதி ${i} / ${n} · ${r} / ${m} முறை`,
       memoDone: 'முடிந்தது! மீண்டும் கேளுங்கள், அல்லது நிறுத்திப் புதிய வசனங்களைத் தேர்ந்தெடுங்கள்.',
       listenAgain: 'மீண்டும் கேள்',
       noSpeech: 'இந்த உலாவியால் சத்தமாக வாசிக்க முடியாது. Chrome, Edge அல்லது Safari-ஐப் பயன்படுத்துங்கள்.',
@@ -265,9 +273,10 @@
   /* ---- State ------------------------------------------------------------ */
   const MAX_REPEAT = 20;
   const RATES = { slow: 0.75, normal: 1, fast: 1.25 };
+  const REF_MODES = ['all', 'first', 'off']; // read the reference: every repetition, the first only, never
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
-    repeat: 3, rate: 'normal', sayRef: true, // memorize assistant
+    repeat: 3, rate: 'normal', refMode: 'all', // memorize assistant
   };
   {
     const saved = store.get(STORE, {});
@@ -278,7 +287,8 @@
     settings.count = int(saved.count, 1, MAXQ, 10);
     settings.repeat = int(saved.repeat, 1, MAX_REPEAT, 3);
     if (saved.rate in RATES) settings.rate = saved.rate;
-    if (typeof saved.sayRef === 'boolean') settings.sayRef = saved.sayRef;
+    if (REF_MODES.includes(saved.refMode)) settings.refMode = saved.refMode;
+    else if (saved.sayRef === false) settings.refMode = 'off'; // setting saved by the older on/off tick box
     if (Array.isArray(saved.types)) {
       const types = Engine.TYPES.filter((t) => saved.types.includes(t));
       if (types.length) settings.types = types;
@@ -296,10 +306,13 @@
   let sendState = '';  // '' | sending | failed
   let errorText = '';
   let completed = null; // quizzes finished by everyone (practice + events); null until loaded
+  let joinLang = '';    // language picked on the join screen, before the player record exists
   let booted = false;  // false during the first paint, so the page does not jump past the logo
 
   // An event is always played in the language it was created in.
-  const lang = () => (event && view !== 'setup' && view !== 'created' ? event.lang : settings.lang);
+  // In an event each player reads in the language they picked when joining.
+  const eventLang = () => (player && player.lang) || joinLang || event.lang;
+  const lang = () => (event && view !== 'setup' && view !== 'created' ? eventLang() : settings.lang);
   const L = () => STR[lang()];
   const playerKey = (id) => `${STORE}:event:${id}`;
   const savePlayer = () => store.set(playerKey(event.id), player);
@@ -394,8 +407,8 @@
       settings.repeat = Math.min(MAX_REPEAT, Math.max(1, Number(e.target.value) || 1));
     } else if (name === 'rate') {
       if (e.target.value in RATES) settings.rate = e.target.value;
-    } else if (name === 'sayRef') {
-      settings.sayRef = e.target.checked;
+    } else if (name === 'refMode') {
+      if (REF_MODES.includes(e.target.value)) settings.refMode = e.target.value;
     }
     save();
     if (form.id === 'setup') syncSetup();
@@ -403,10 +416,13 @@
   }
 
   /* ---- Memorize assistant ----------------------------------------------
-     Reads each verse in the range aloud, `repeat` times, then moves on.
-     Uses the browser's own speech (Web Speech API), so nothing is downloaded. */
+     Reads the range aloud one passage at a time, each `repeat` times, then
+     moves on. A passage is a run of verses that follow on from each other in
+     the same chapter (Genesis 1:26, 27, 28); a verse on its own is a passage
+     of one. Uses the browser's own speech (Web Speech API), so nothing is
+     downloaded. */
   const synth = window.speechSynthesis || null;
-  let memo = null;      // { list, reps, i, r, paused, done, token }; null while choosing settings
+  let memo = null;      // { list (passages), reps, i, r, k (verse being read, -1 = reference), paused, done, token }; null while choosing settings
   let memoTimer = 0;
   let memoUtter = null; // keeps the utterance alive: Chrome can lose the end event of a collected one
   let wakeLock = null;
@@ -421,6 +437,32 @@
       if (v) return v;
     }
     return null;
+  }
+
+  /* "Isaiah 40:6b" -> { book, chapter, verse: 6, label: "6b" } */
+  function parseRef(ref) {
+    const m = /^(.*?)\s+(\d+):(\d+)([a-z]?)$/.exec(ref);
+    return m ? { book: m[1], chapter: Number(m[2]), verse: Number(m[3]), label: m[3] + m[4] } : null;
+  }
+
+  /* Group verses that follow on from each other into passages: { ref, verses, labels }. */
+  function passages(list, code) {
+    const out = [];
+    let prev = null;
+    list.forEach((v) => {
+      const at = parseRef(v.ref);
+      const follows = at && prev && at.book === prev.book && at.chapter === prev.chapter && at.verse === prev.verse + 1;
+      if (follows) {
+        const p = out[out.length - 1];
+        p.verses.push(v);
+        p.labels.push(at.label);
+        p.ref = STR[code].span(p.verses[0].ref, at.label);
+      } else {
+        out.push({ ref: v.ref, verses: [v], labels: [at ? at.label : ''] });
+      }
+      prev = at;
+    });
+    return out;
   }
 
   /* Short pieces, cut at punctuation: Chrome stops speaking part way through a long utterance. */
@@ -474,29 +516,47 @@
     if (!synth) return;
     memoHalt();
     memo = {
-      list: DATA[settings.lang].slice(settings.from - 1, settings.to),
-      reps: settings.repeat, i: 0, r: 0, paused: false, done: false, token: 0,
+      list: passages(DATA[settings.lang].slice(settings.from - 1, settings.to), settings.lang),
+      reps: settings.repeat, i: 0, r: 0, k: -1, paused: false, done: false, token: 0,
     };
     keepAwake(true);
     render(true);
     memoPlay();
   }
 
-  /* Read the current verse once, then count the repetition and carry on. */
-  function memoPlay() {
+  /* Show which verse of the passage is being read, without redrawing the screen. */
+  function memoMark() {
+    document.querySelectorAll('.memo-verse .verse').forEach((el) => {
+      const now = Number(el.dataset.k) === memo.k && memo.list[memo.i].verses.length > 1;
+      el.classList.toggle('now', now);
+      if (now) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  }
+
+  /* Read the current passage once, then count the repetition and carry on.
+     fromVerse: where to pick up after a pause (0 = from the top, with the reference). */
+  function memoPlay(fromVerse) {
     const token = ++memo.token;
-    const v = memo.list[memo.i];
+    const p = memo.list[memo.i];
+    const start = Math.max(0, fromVerse || 0);
+    const sayRef = start === 0 && (settings.refMode === 'all' || (settings.refMode === 'first' && memo.r === 0));
     // "1:26" is read as a clock time by some voices
-    const lines = (settings.sayRef ? [v.ref.replace(/(\d+):(\d+)/, '$1, $2')] : []).concat(speechChunks(v.text));
+    const lines = sayRef ? [{ text: p.ref.replace(/(\d+):(\d+)/, '$1, $2'), k: -1 }] : [];
+    p.verses.slice(start).forEach((v, j) => speechChunks(v.text).forEach((text) => lines.push({ text, k: start + j })));
     const voice = pickVoice(settings.lang);
-    let k = 0;
+    let n = 0;
     const step = () => {
       if (!memo || memo.token !== token) return;
-      if (k >= lines.length) {
+      if (n >= lines.length) {
         memoTimer = setTimeout(() => memoAdvance(token), memo.r + 1 < memo.reps ? 800 : 1600);
         return;
       }
-      const u = new SpeechSynthesisUtterance(lines[k++]);
+      const line = lines[n++];
+      if (line.k !== memo.k) {
+        memo.k = line.k;
+        memoMark();
+      }
+      const u = new SpeechSynthesisUtterance(line.text);
       u.lang = voice ? voice.lang : settings.lang === 'ta' ? 'ta-IN' : 'en-IN';
       if (voice) u.voice = voice;
       u.rate = RATES[settings.rate];
@@ -516,6 +576,7 @@
   function memoAdvance(token) {
     if (!memo || memo.token !== token) return;
     memo.r++;
+    memo.k = -1;
     if (memo.r >= memo.reps) {
       if (memo.i === memo.list.length - 1) {
         memo.done = true;
@@ -533,6 +594,7 @@
     memoHalt();
     memo.i = Math.min(memo.list.length - 1, Math.max(0, memo.i + by));
     memo.r = 0;
+    memo.k = -1;
     memo.done = false;
     render();
     if (!memo.paused) {
@@ -542,15 +604,20 @@
   }
 
   function syncMemo() {
-    $('#in-range').textContent = L().inRange(settings.to - settings.from + 1);
+    const parts = passages(DATA[settings.lang].slice(settings.from - 1, settings.to), settings.lang).length;
+    $('#in-range').textContent = `${L().inRange(settings.to - settings.from + 1)}, ${L().inPassages(parts)}`;
     $('#repeat-out').textContent = settings.repeat;
   }
 
   function memoHtml() {
     const s = L();
     if (memo) {
-      const v = memo.list[memo.i];
+      const p = memo.list[memo.i];
       const n = memo.list.length;
+      const many = p.verses.length > 1;
+      const first = p.verses[0].n;
+      const verses = p.verses.map((v, j) =>
+        `<p class="verse${many && j === memo.k ? ' now' : ''}" data-k="${j}">${many ? `<sup>${esc(p.labels[j])}</sup> ` : ''}${esc(v.text)}</p>`).join('');
       const doneReps = memo.done ? memo.reps : memo.r;
       const dots = Array.from({ length: memo.reps }, (x, j) =>
         `<i class="${j < doneReps ? 'on' : j === doneReps && !memo.paused ? 'now' : ''}"></i>`).join('');
@@ -569,8 +636,8 @@
               <i style="width:${(at / total) * 100}%"></i></div>
           </div>
           <div class="stack memo-verse">
-            <h2 class="ref">${v.n}. ${esc(v.ref)}</h2>
-            <p class="verse">${esc(v.text)}</p>
+            <h2 class="ref">${many ? `${first}–${first + p.verses.length - 1}` : first}. ${esc(p.ref)}</h2>
+            ${verses}
             <div class="reps" aria-hidden="true">${dots}</div>
           </div>
           ${memo.done ? `<div class="flash flash-ok" role="status">${esc(s.memoDone)}</div>` : ''}
@@ -608,7 +675,8 @@
         <span class="range-ends"><span>1</span><span>${MAX_REPEAT}</span></span>
       </label>
       <label class="field"><span>${esc(s.speed)}</span><select name="rate">${rates}</select></label>
-      <label class="check"><input type="checkbox" name="sayRef"${settings.sayRef ? ' checked' : ''}> <span>${esc(s.sayRef)}</span></label>
+      <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
+        `<option value="${m}"${settings.refMode === m ? ' selected' : ''}>${esc(s.refModes[m])}</option>`).join('')}</select></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
       <div class="button-row end"><button class="button primary"${synth ? '' : ' disabled'}>${esc(s.listen)}</button></div>
     </form>${help}</div>`;
@@ -671,8 +739,8 @@
   }
 
   function eventSummary() {
-    const all = DATA[event.lang];
-    return STR[event.lang].summary(event.count, all[event.from - 1].ref, all[event.to - 1].ref);
+    const all = DATA[lang()];
+    return L().summary(event.count, all[event.from - 1].ref, all[event.to - 1].ref);
   }
 
   /* Hash routes: #e=ID opens the quiz, #board=ID the leaderboard. */
@@ -713,6 +781,7 @@
       }
     }
     player = store.get(playerKey(id), null);
+    joinLang = '';
     // someone who has finished only ever sees their result, never the quiz again
     view = m[1] === 'board' ? 'board' : player && player.done ? 'results' : 'join';
     render(true);
@@ -725,11 +794,15 @@
     return `<div class="narrow stack">
       <form class="card stack" id="join-form">
         <div class="field"><p><strong>${esc(eventSummary())}</strong></p><small>${esc(s.rule)}</small></div>
-        ${resume ? '' : `<label class="field"><span>${esc(s.yourName)}</span>
+        ${resume ? '' : `<div class="field"><span>${esc(s.language)}</span>
+          <div class="seg">${[['en', 'English'], ['ta', 'தமிழ்']].map(([code, label]) =>
+            `<button type="button" data-act="joinLang" data-lang="${code}" lang="${code}" aria-pressed="${eventLang() === code}">${label}</button>`).join('')}</div>
+        </div>
+        <label class="field"><span>${esc(s.yourName)}</span>
           <input type="text" name="name" maxlength="40" required autocomplete="name"></label>`}
         ${notice ? `<div class="flash flash-error" role="alert">${esc(notice)}</div>` : ''}
         <div class="button-row end">
-          <button class="button primary"${busy ? ' disabled' : ''}>${esc(busy ? s.working : resume ? s.resume(player.name) : s.join)}</button>
+          <button class="button primary"${busy ? ' disabled' : ''}>${esc(busy ? s.working : resume ? s.resumeAs(player.name) : s.join)}</button>
         </div>
       </form>
     </div>`;
@@ -754,7 +827,7 @@
     $('#join-form').elements.name.value = name;
     try {
       const res = await Api.call('join', { id: event.id, name, key: joinKey(event.id) });
-      player = { name: res.name, token: res.token, start: Date.now(), answers: [], done: false, sent: false, event };
+      player = { name: res.name, token: res.token, lang: eventLang(), start: Date.now(), answers: [], done: false, sent: false, event };
       savePlayer();
     } catch (e) {
       notice = e.message === 'NAME_TAKEN' ? L().nameTaken : L().failed;
@@ -771,7 +844,9 @@
   /* Rebuild the event's questions from its seed and carry on after the last
      answered one, so a page refresh cannot be used to retry a question. */
   function playEvent() {
-    const qs = Engine.buildSession(DATA[event.lang], event.from, event.to, event.count, event.types, event.lang, event.seed);
+    const code = eventLang();
+    const others = Object.keys(DATA).filter((c) => c !== code).map((c) => DATA[c]);
+    const qs = Engine.buildSession(DATA[code], event.from, event.to, event.count, event.types, code, event.seed, others);
     qs.forEach((q, i) => {
       if (q.type === 'order') q.placed = [];
       if (i < player.answers.length) {
@@ -1088,6 +1163,12 @@
       if (location.hash.length > 1) location.hash = '';
       else route();
     },
+    joinLang(el) {
+      const name = $('#join-form').elements.name.value; // render() rebuilds the form
+      joinLang = el.dataset.lang;
+      render();
+      $('#join-form').elements.name.value = name;
+    },
     again: startPractice,
     memoAgain: memoStart,
     memoPause() {
@@ -1097,11 +1178,11 @@
       render();
     },
     memoResume() {
-      // starts the interrupted reading of the verse again from its beginning
+      // picks up at the start of the verse that was interrupted
       memo.paused = false;
       keepAwake(true);
       render();
-      memoPlay();
+      memoPlay(memo.k);
     },
     memoPrev() { memoJump(-1); },
     memoNext() { memoJump(1); },

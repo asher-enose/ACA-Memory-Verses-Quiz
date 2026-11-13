@@ -144,21 +144,27 @@
 
   /* all: verses of one language; from/to: verse numbers (inclusive).
      seed: optional integer; the same seed always gives the same questions. */
-  function buildSession(all, from, to, count, types, lang, seed) {
+  function buildSession(all, from, to, count, types, lang, seed, others) {
     random = seed == null ? Math.random : seeded(seed);
     try {
-      return build(all, from, to, count, types, lang);
+      return build(all, from, to, count, types, lang, seed, others || []);
     } finally {
       random = Math.random;
     }
   }
 
-  function build(all, from, to, count, types, lang) {
+  /* others: the same verses in the other languages. A group event passes them
+     so that the choice of verses and game types never depends on which language
+     a player picked: every player gets the same verse and the same game at each
+     step, whatever language they read it in. */
+  function build(all, from, to, count, types, lang, seed, others) {
+    const fits = (t, v) => eligible(t, v) && others.every((list) => eligible(t, list[v.n - 1]));
+    const plan = random; // decides verse order and game types only
     const range = all.filter((v) => v.n >= from && v.n <= to);
     types = types.filter((t) => MAKERS[t]);
     if (!range.length || !types.length) return [];
     // leave out verses too short for every chosen game; if that leaves nothing, use them anyway
-    const usable = range.filter((v) => types.some((t) => eligible(t, v)));
+    const usable = range.filter((v) => types.some((t) => fits(t, v)));
     const pool = usable.length ? usable : range;
     const used = new Set();
     const tally = {};
@@ -174,12 +180,16 @@
       // least-used game type first, so a mix stays balanced
       const order = shuffle(types).sort((a, b) => (tally[a] || 0) - (tally[b] || 0));
       const type =
-        order.find((t) => eligible(t, v) && !used.has(v.n + t)) ||
-        order.find((t) => eligible(t, v)) ||
+        order.find((t) => fits(t, v) && !used.has(v.n + t)) ||
+        order.find((t) => fits(t, v)) ||
         order[0]; // never a game type that was not chosen
       used.add(v.n + type);
       tally[type] = (tally[type] || 0) + 1;
+      // each question draws from its own stream: how much randomness one language's
+      // wording uses must not shift what comes next
+      if (seed != null) random = seeded((seed + Math.imul(out.length + 1, 0x9e3779b1)) >>> 0);
       out.push(MAKERS[type](v, all, lang));
+      random = plan;
     }
     return out;
   }
