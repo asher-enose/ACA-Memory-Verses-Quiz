@@ -68,6 +68,8 @@ Good to know:
   player who reopens the link sees their result, not the quiz.
 - Refreshing the page mid-quiz continues from the next question; the clock keeps running.
 - Events you created are listed on the home page of the device you created them on.
+  Each device keeps its own list; it is not shared between devices.
+- The quiz link can be copied again later from the event's Leaderboard or My result page.
 
 ### One-time setup for group quizzes
 
@@ -104,6 +106,12 @@ Open `index.html` in a browser, or serve the folder:
 ```
 python3 -m http.server 8000
 ```
+
+## Publishing a change
+
+Phones keep a copy of the site's files. So that they pick up a new version at once,
+`index.html` loads its five files with a `?v=...` on the end (for example
+`js/app.js?v=20261113b`). Change that value on all five whenever you publish.
 
 ## Publish on GitHub Pages
 

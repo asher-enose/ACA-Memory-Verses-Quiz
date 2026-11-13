@@ -337,6 +337,20 @@
     } catch (e) { /* leave the last known number */ }
   }
 
+  /* Group quizzes created on this device. Kept on the device only, on purpose:
+     each device has its own list and nothing is shared between them. */
+  function eventsListHtml() {
+    const s = L();
+    const list = store.get(`${STORE}:created`, []);
+    if (!list.length) return '';
+    return `<div class="field"><span>${esc(s.myEvents)}</span>
+      <ul class="rows">${list.map((m) => `
+        <li class="row-head"><strong>${esc(m.title)}</strong>
+          <span class="row-links"><a href="#e=${esc(m.id)}">${esc(s.quiz)}</a><a href="#board=${esc(m.id)}">${esc(s.board)}</a></span>
+        </li>`).join('')}</ul>
+    </div>`;
+  }
+
   /* ---- Setup screen ----------------------------------------------------- */
   function setupHtml() {
     const s = L();
@@ -348,14 +362,6 @@
         <input type="checkbox" name="type" value="${t}"${settings.types.includes(t) ? ' checked' : ''}>
         <span><strong>${esc(s.types[t][0])}</strong><small>${esc(s.types[t][1])}</small></span>
       </label>`).join('');
-    const mine = store.get(`${STORE}:created`, []);
-    const mineHtml = !mine.length ? '' : `
-      <div class="field"><span>${esc(s.myEvents)}</span>
-        <ul class="rows">${mine.map((m) => `
-          <li class="row-head"><strong>${esc(m.title)}</strong>
-            <span class="row-links"><a href="#e=${esc(m.id)}">${esc(s.quiz)}</a><a href="#board=${esc(m.id)}">${esc(s.board)}</a></span>
-          </li>`).join('')}</ul>
-      </div>`;
     return `<div class="narrow stack">
     <form class="card stack" id="setup">
       <div class="field">
@@ -384,7 +390,7 @@
         <input type="text" name="title" maxlength="60" required placeholder="${esc(s.eventNameEg)}" autocomplete="off"></label>
       ${notice ? `<div class="flash flash-error" role="alert">${esc(notice)}</div>` : ''}
       <div class="button-row end"><button class="button" id="create"${busy || !Api.ready() ? ' disabled' : ''}>${esc(busy ? s.working : s.create)}</button></div>
-      ${mineHtml}
+      ${eventsListHtml()}
     </form></div>`;
   }
 
