@@ -132,6 +132,8 @@
       memoAt: (i, n, r, m) => `Part ${i} of ${n} · Time ${r} of ${m}`,
       memoDone: 'All done! Listen again, or stop and pick new verses.',
       listenAgain: 'Listen again',
+      voiceFile: 'Recorded voice',
+      voiceDevice: 'Phone’s voice',
       noSpeech: 'This browser cannot read aloud. Try Chrome, Edge or Safari.',
       noVoice: 'No English voice was found on this device, so it may read silently or wrongly.',
       types: {
@@ -248,6 +250,8 @@
       memoAt: (i, n, r, m) => `பகுதி ${i} / ${n} · ${r} / ${m} முறை`,
       memoDone: 'முடிந்தது! மீண்டும் கேளுங்கள், அல்லது நிறுத்திப் புதிய வசனங்களைத் தேர்ந்தெடுங்கள்.',
       listenAgain: 'மீண்டும் கேள்',
+      voiceFile: 'பதிவு செய்யப்பட்ட குரல்',
+      voiceDevice: 'சாதனத்தின் குரல்',
       noSpeech: 'இந்த உலாவியால் சத்தமாக வாசிக்க முடியாது. Chrome, Edge அல்லது Safari-ஐப் பயன்படுத்துங்கள்.',
       // always shown on the Tamil memorize screen: a missing Tamil voice cannot be detected reliably
       voiceHelp: {
@@ -528,7 +532,26 @@
     if (memo) memo.token++;
     clearTimeout(memoTimer);
     if (synth) synth.cancel();
+    memoAudio.pause();
   }
+
+  /* Pre-made audio (tools/make_audio.py). A verse or reference listed in js/audio.js is
+     played from its file, which sounds the same on every device; anything else is read
+     by the phone's own voice. */
+  const AUDIO = window.AUDIO || {};
+  const memoAudio = new Audio(); // one element for every clip: once a tap has started it, iPhones let it play the rest
+  let audioUnlocked = false;
+  const SILENCE = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+  const pad3 = (n) => String(n).padStart(3, '0');
+  const has = (kind, key) => !!(AUDIO[settings.lang] && AUDIO[settings.lang][kind].includes(key));
+  const verseSrc = (v) => (has('verses', v.n) ? `assets/audio/${settings.lang}/v${pad3(v.n)}.mp3` : '');
+  function refSrc(p) {
+    const first = p.verses[0].n;
+    const last = p.verses[p.verses.length - 1].n;
+    if (!has('refs', first === last ? `${first}` : `${first}-${last}`)) return '';
+    return `assets/audio/${settings.lang}/r${pad3(first)}${first === last ? '' : `-${pad3(last)}`}.mp3`;
+  }
+  const anyAudio = () => !!(AUDIO[settings.lang] && AUDIO[settings.lang].verses.length);
 
   function memoClose() {
     memoHalt();
@@ -537,7 +560,7 @@
   }
 
   function memoStart() {
-    if (!synth) return;
+    if (!synth && !anyAudio()) return;
     memoHalt();
     memo = {
       list: memoParts(),
@@ -557,6 +580,13 @@
     });
   }
 
+  /* Say on the player which voice is reading, without redrawing the screen. */
+  function memoVoice(fromFile) {
+    memo.fromFile = fromFile;
+    const el = $('#memo-voice');
+    if (el) el.textContent = fromFile ? L().voiceFile : L().voiceDevice;
+  }
+
   /* Read the current passage once, then count the repetition and carry on.
      fromVerse: where to pick up after a pause (0 = from the top, with the reference). */
   function memoPlay(fromVerse) {
@@ -564,9 +594,14 @@
     const p = memo.list[memo.i];
     const start = Math.max(0, fromVerse || 0);
     const sayRef = start === 0 && (settings.refMode === 'all' || (settings.refMode === 'first' && memo.r === 0));
+    // Each line is one thing to play: { k, src } for an audio file (with `texts` to fall
+    // back on), or { k, text } for the phone's voice. k = verse index, -1 for the reference.
+    const spoken = (texts, k) => texts.map((text) => ({ text, k }));
+    const add = (src, texts, k) => (src ? lines.push({ src, texts, k }) : lines.push(...spoken(texts, k)));
+    const lines = [];
     // "1:26" is read as a clock time by some voices
-    const lines = sayRef ? [{ text: p.ref.replace(/(\d+):(\d+)/, '$1, $2'), k: -1 }] : [];
-    p.verses.slice(start).forEach((v, j) => speechChunks(v.text).forEach((text) => lines.push({ text, k: start + j })));
+    if (sayRef) add(refSrc(p), [p.ref.replace(/(\d+):(\d+)/, '$1, $2')], -1);
+    p.verses.slice(start).forEach((v, j) => add(verseSrc(v), speechChunks(v.text), start + j));
     const voice = pickVoice(settings.lang);
     let n = 0;
     const step = () => {
@@ -580,6 +615,26 @@
         memo.k = line.k;
         memoMark();
       }
+      if (line.src) {
+        // a file that will not load or play is read by the phone's voice instead
+        let failed = false;
+        const fallBack = () => {
+          if (failed || !memo || memo.token !== token) return;
+          failed = true;
+          lines.splice(n, 0, ...spoken(line.texts, line.k));
+          step();
+        };
+        memoVoice(true);
+        memoAudio.onended = step;
+        memoAudio.onerror = fallBack;
+        memoAudio.src = line.src;
+        memoAudio.defaultPlaybackRate = memoAudio.playbackRate = RATES[settings.rate]; // setting src resets the speed
+        const started = memoAudio.play();
+        if (started) started.then(() => { audioUnlocked = true; }, fallBack);
+        return;
+      }
+      if (!synth) return void (memoTimer = setTimeout(step, 0)); // nothing can read this line here
+      memoVoice(false);
       const u = new SpeechSynthesisUtterance(line.text);
       u.lang = voice ? voice.lang : settings.lang === 'ta' ? 'ta-IN' : 'en-IN';
       if (voice) u.voice = voice;
@@ -589,7 +644,15 @@
       memoUtter = u;
       synth.speak(u);
     };
-    if (synth.speaking || synth.pending) {
+    // Still inside the tap here. If a file comes later but the first line is spoken, start
+    // the audio element now with a moment of silence, or iPhones refuse the file later.
+    if (!audioUnlocked && !lines[0].src && anyAudio()) {
+      memoAudio.onended = memoAudio.onerror = null;
+      memoAudio.src = SILENCE;
+      const started = memoAudio.play();
+      if (started) started.then(() => { audioUnlocked = true; }, () => {});
+    }
+    if (synth && (synth.speaking || synth.pending)) {
       synth.cancel();
       memoTimer = setTimeout(step, 80); // Chrome can drop a speak() made straight after cancel()
     } else {
@@ -654,7 +717,8 @@
       return `<div class="narrow stack">
         <div class="card stack">
           <div class="field">
-            <span>${esc(s.memoAt(memo.i + 1, n, Math.min(doneReps + 1, memo.reps), memo.reps))}</span>
+            <span class="count-label">${esc(s.memoAt(memo.i + 1, n, Math.min(doneReps + 1, memo.reps), memo.reps))}
+              <small class="badge badge-voice" id="memo-voice">${memo.fromFile == null ? '' : esc(memo.fromFile ? s.voiceFile : s.voiceDevice)}</small></span>
             <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${at}">
               <i style="width:${(at / total) * 100}%"></i></div>
           </div>
@@ -702,7 +766,7 @@
       <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
         `<option value="${m}"${settings.refMode === m ? ' selected' : ''}>${esc(s.refModes[m])}</option>`).join('')}</select></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
-      <div class="button-row end"><button class="button primary"${synth ? '' : ' disabled'}>${esc(s.listen)}</button></div>
+      <div class="button-row end"><button class="button primary"${synth || anyAudio() ? '' : ' disabled'}>${esc(s.listen)}</button></div>
     </form>${help}</div>`;
   }
   // voices arrive late in Chrome; refresh the "no voice" note once they are known

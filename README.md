@@ -42,7 +42,22 @@ repeated on its own instead.
 Pause, Resume, Previous, Next and Stop are on the player. Resume picks up at the
 start of the verse that was interrupted.
 
-It uses the voice built into the browser, in the language chosen in the menu bar,
+### Recorded voice (trial)
+
+Some phones have no Tamil voice. So verses can instead be played from audio files, which
+sound the same on every device. This is on trial for verses 1–5 in both languages; all
+other verses are still read by the phone's own voice. The player shows "Recorded voice"
+or "Phone's voice" so you can tell which you are hearing.
+
+The files live in `assets/audio/<language>/` and are listed in `js/audio.js`. To make
+more (needs internet; it sends the verse text to Microsoft's online voices):
+
+```
+pip install --user edge-tts
+python3 tools/make_audio.py 6-20
+```
+
+Where there is no file, it uses the voice built into the browser, in the language chosen in the menu bar,
 so nothing is downloaded. Tamil needs a Tamil voice on the device; the screen says
 so when none is found (on Android: Settings › Text-to-speech › Google › Install voice data).
 
@@ -110,8 +125,8 @@ python3 -m http.server 8000
 ## Publishing a change
 
 Phones keep a copy of the site's files. So that they pick up a new version at once,
-`index.html` loads its five files with a `?v=...` on the end (for example
-`js/app.js?v=20261113b`). Change that value on all five whenever you publish.
+`index.html` loads its six files with a `?v=...` on the end (for example
+`js/app.js?v=20261113b`). Change that value on all six whenever you publish.
 
 ## Publish on GitHub Pages
 
@@ -138,4 +153,6 @@ typo you spot there.
 - `js/app.js` — setup, game, results, event and leaderboard screens
 - `js/config.js` — the Apps Script URL for group quizzes
 - `apps-script/Code.gs` — Google Sheet backend for events and the leaderboard
+- `js/audio.js` — list of verses that have an audio file (written by the script below)
+- `tools/make_audio.py` — makes the audio files for the Memorize screen
 - `assets/` — logo and fonts (Poppins, Oooh Baby, Noto Sans Tamil; SIL Open Font License)
