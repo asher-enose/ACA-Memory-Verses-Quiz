@@ -89,6 +89,8 @@
       board: 'Leaderboard',
       home: 'Practice',
       summary: (n, a, b) => `${n} questions · ${a} – ${b}`,
+      myResult: 'My result',
+      doneNote: 'You have completed this quiz. Each person can take it once.',
       language: 'Language',
       yourName: 'Your name',
       join: 'Start quiz',
@@ -117,7 +119,7 @@
       inPassages: (n) => (n === 1 ? 'read as 1 part' : `read as ${n} parts`),
       speed: 'Reading speed',
       rates: { slow: 'Slow', normal: 'Normal', fast: 'Fast' },
-      group: 'Read verses that follow on as one passage',
+      groupVerses: 'Read verses that follow on as one passage',
       refMode: 'Read the reference',
       refModes: { all: 'Every time', first: 'First time only', off: 'Off' },
       listen: 'Start listening',
@@ -203,6 +205,8 @@
       board: 'தரவரிசைப் பட்டியல்',
       home: 'பயிற்சி',
       summary: (n, a, b) => `${n} கேள்விகள் · ${a} – ${b}`,
+      myResult: 'என் முடிவு',
+      doneNote: 'நீங்கள் இந்த வினாடி வினாவை முடித்துவிட்டீர்கள். ஒருவர் ஒருமுறை மட்டுமே பங்கேற்கலாம்.',
       language: 'மொழி',
       yourName: 'உங்கள் பெயர்',
       join: 'தொடங்கு',
@@ -230,7 +234,7 @@
       inPassages: (n) => `${n} பகுதிகளாக வாசிக்கப்படும்`,
       speed: 'வாசிக்கும் வேகம்',
       rates: { slow: 'மெதுவாக', normal: 'சாதாரணம்', fast: 'வேகமாக' },
-      group: 'தொடர்ச்சியான வசனங்களை ஒரே பகுதியாக வாசிக்கவும்',
+      groupVerses: 'தொடர்ச்சியான வசனங்களை ஒரே பகுதியாக வாசிக்கவும்',
       refMode: 'வசன முகவரியை வாசிக்க',
       refModes: { all: 'ஒவ்வொரு முறையும்', first: 'முதல் முறை மட்டும்', off: 'வேண்டாம்' },
       listen: 'கேட்கத் தொடங்கு',
@@ -310,6 +314,7 @@
   let errorText = '';
   let completed = null; // quizzes finished by everyone (practice + events); null until loaded
   let joinLang = '';    // language picked on the join screen, before the player record exists
+  let routeSeq = 0;     // counts navigations, so a slow load can tell it has been overtaken
   let booted = false;  // false during the first paint, so the page does not jump past the logo
 
   // An event is always played in the language it was created in.
@@ -685,7 +690,7 @@
         <span class="range-ends"><span>1</span><span>${MAX_REPEAT}</span></span>
       </label>
       <label class="field"><span>${esc(s.speed)}</span><select name="rate">${rates}</select></label>
-      <label class="check"><input type="checkbox" name="group"${settings.group ? ' checked' : ''}> <span>${esc(s.group)}</span></label>
+      <label class="check"><input type="checkbox" name="group"${settings.group ? ' checked' : ''}> <span>${esc(s.groupVerses)}</span></label>
       <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
         `<option value="${m}"${settings.refMode === m ? ' selected' : ''}>${esc(s.refModes[m])}</option>`).join('')}</select></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
@@ -762,6 +767,7 @@
     sendState = '';
     memoClose(); // leaving the memorize screen stops the voice
     if (!m) {
+      routeSeq++;
       event = board = player = null;
       view = location.hash === '#memorize' ? 'memo' : 'setup';
       render(true);
@@ -769,6 +775,7 @@
       return;
     }
     const id = m[2];
+    const ticket = ++routeSeq;
     if (!event || event.id !== id || !board) {
       event = board = player = null;
       view = 'loading';
@@ -776,9 +783,11 @@
       try {
         if (!Api.ready()) throw new Error('not configured');
         const res = await Api.call('getEvent', { id });
+        if (ticket !== routeSeq) return; // a newer tap has taken over
         event = res.event;
         board = res.board;
       } catch (e) {
+        if (ticket !== routeSeq) return;
         // offline: a player who already joined can still carry on from the copy kept on this device
         const kept = store.get(playerKey(id), null);
         if (e.message !== 'EVENT_NOT_FOUND' && kept && kept.event) {
@@ -854,7 +863,7 @@
 
   /* Rebuild the event's questions from its seed and carry on after the last
      answered one, so a page refresh cannot be used to retry a question. */
-  function playEvent() {
+  function eventQuestions() {
     const code = eventLang();
     const others = Object.keys(DATA).filter((c) => c !== code).map((c) => DATA[c]);
     const qs = Engine.buildSession(DATA[code], event.from, event.to, event.count, event.types, code, event.seed, others);
@@ -865,6 +874,11 @@
         q.correct = player.answers[i];
       }
     });
+    return qs;
+  }
+
+  function playEvent() {
+    const qs = eventQuestions();
     game = { qs, i: Math.min(player.answers.length, qs.length - 1), score: player.answers.filter(Boolean).length };
     if (player.answers.length >= qs.length) return finishEvent();
     view = 'game';
@@ -909,12 +923,11 @@
       const res = await Api.call('board', { id });
       if (!event || event.id !== id) return;
       board = res;
-      if (view === 'board' || view === 'results') render();
+      if (view === 'board') render();
     } catch (e) { /* keep showing the last list */ }
   }
   setInterval(() => {
-    const watching = view === 'board' || (view === 'results' && event && player && player.sent);
-    if (watching && !document.hidden) refreshBoard();
+    if (view === 'board' && !document.hidden) refreshBoard();
   }, BOARD_REFRESH_MS);
 
   function boardHtml() {
@@ -1029,9 +1042,9 @@
   }
 
   /* ---- Results screen --------------------------------------------------- */
-  function reviewHtml() {
+  function reviewHtml(qs) {
     const s = L();
-    const rows = game.qs.map((q) => `
+    const rows = qs.map((q) => `
       <li>
         <div class="row-head">
           <span class="badge ${q.correct ? 'badge-ok' : 'badge-no'}">${q.correct ? '✓' : '✗'}</span>
@@ -1051,14 +1064,22 @@
           <button type="button" class="button primary" data-act="again">${esc(s.again)}</button>
           <button type="button" class="button ghost" data-act="home">${esc(s.change)}</button>
         </div>
-        ${reviewHtml()}
+        ${reviewHtml(game.qs)}
       </div>`;
     }
     const status =
       sendState === 'sending' ? `<div class="flash flash-info" role="status">${esc(s.sending)}</div>` :
       sendState === 'failed' ? `<div class="flash flash-error" role="alert"><p>${esc(s.sendFail)}</p>
         <div class="button-row"><button type="button" class="button" data-act="resend">${esc(s.retry)}</button></div></div>` : '';
-    return `<div class="narrow stack">${status}${boardHtml()}${game ? reviewHtml() : ''}</div>`;
+    // The Quiz tab of someone who has finished: their own result and answers. The table of
+    // everyone's scores lives on the Leaderboard tab only, so the two tabs never look alike.
+    // Entries saved before players could pick a language have no `lang`; their questions
+    // came from the older generator and cannot be rebuilt, so no review for those.
+    const qs = game ? game.qs : player.lang ? eventQuestions() : null;
+    return `<div class="narrow stack">${status}
+      <div class="flash flash-ok" role="status"><p>${esc(s.doneNote)}</p></div>
+      <div class="button-row"><a class="button primary" href="#board=${esc(event.id)}">${esc(s.board)}</a></div>
+      ${qs ? reviewHtml(qs) : ''}</div>`;
   }
 
   /* ---- Banner + menu bar ------------------------------------------------ */
@@ -1114,7 +1135,7 @@
     }
     const home = `<li><button type="button" data-act="exit">${esc(s.home)}</button></li>`;
     if (view === 'join' || view === 'board' || (view === 'results' && event)) {
-      return link(`#e=${event.id}`, s.quiz, view !== 'board') + link(`#board=${event.id}`, s.board, view === 'board') + home;
+      return link(`#e=${event.id}`, player && player.done ? s.myResult : s.quiz, view !== 'board') + link(`#board=${event.id}`, s.board, view === 'board') + home;
     }
     if (view === 'loading' || view === 'error' || view === 'created') return home;
     const item = (code, label) =>
