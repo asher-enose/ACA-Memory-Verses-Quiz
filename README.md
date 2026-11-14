@@ -39,6 +39,10 @@ its own is read by itself. The verse being read is highlighted.
 Untick **Read verses that follow on as one passage** to have every verse read and
 repeated on its own instead.
 
+Tick **Mute the voice (show the verses only)** to read silently: the verses are shown
+and highlighted at reading pace, with the same repeats, and nothing is played. The
+player also has a **Mute voice / Unmute voice** button to switch while it is running.
+
 Pause, Resume, Previous, Next and Stop are on the player. Resume picks up at the
 start of the verse that was interrupted.
 
@@ -67,8 +71,7 @@ redo a clip that sounds wrong, delete that file and run it again. The script als
 the `?v=` value in `index.html` for you.
 
 Where there is no file, it uses the voice built into the browser, in the language chosen in the menu bar,
-so nothing is downloaded. Tamil needs a Tamil voice on the device; the screen says
-so when none is found (on Android: Settings › Text-to-speech › Google › Install voice data).
+so nothing is downloaded. A device with no Tamil voice reads only the numbers there.
 
 ## Group quiz (events + leaderboard)
 

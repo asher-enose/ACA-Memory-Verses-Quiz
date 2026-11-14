@@ -134,6 +134,11 @@
       listenAgain: 'Listen again',
       voiceFile: 'Recorded voice',
       voiceDevice: 'Phone’s voice',
+      mute: 'Mute the voice (show the verses only)',
+      voiceMuted: 'Voice off',
+      muteOn: 'Mute voice',
+      muteOff: 'Unmute voice',
+      startSilent: 'Start reading',
       noSpeech: 'This browser cannot read aloud. Try Chrome, Edge or Safari.',
       noVoice: 'No English voice was found on this device, so it may read silently or wrongly.',
       types: {
@@ -252,17 +257,12 @@
       listenAgain: 'மீண்டும் கேள்',
       voiceFile: 'பதிவு செய்யப்பட்ட குரல்',
       voiceDevice: 'சாதனத்தின் குரல்',
+      mute: 'குரல் வேண்டாம் (வசனங்களை மட்டும் காட்டு)',
+      voiceMuted: 'குரல் இல்லை',
+      muteOn: 'ஒலியை அணை',
+      muteOff: 'ஒலியை இயக்கு',
+      startSilent: 'வாசிக்கத் தொடங்கு',
       noSpeech: 'இந்த உலாவியால் சத்தமாக வாசிக்க முடியாது. Chrome, Edge அல்லது Safari-ஐப் பயன்படுத்துங்கள்.',
-      // always shown on the Tamil memorize screen: a missing Tamil voice cannot be detected reliably
-      voiceHelp: {
-        title: 'தமிழ் கேட்கவில்லையா? எண்கள் மட்டும் கேட்கிறதா?',
-        intro: 'அப்படியானால் உங்கள் சாதனத்தில் தமிழ்க் குரல் இல்லை. ஒருமுறை இதைச் செய்யுங்கள்:',
-        steps: [
-          'Android: Settings › System › Languages & input › Text-to-speech output › “Speech Services by Google” அருகிலுள்ள ⚙ › Install voice data › தமிழ். பிறகு இந்தப் பக்கத்தை மீண்டும் திறக்கவும்.',
-          'Windows கணினி: Chrome-க்குப் பதிலாக Edge உலாவியைப் பயன்படுத்துங்கள்.',
-          'iPhone: Settings › Accessibility › Spoken Content › Voices › Tamil என்பதில் ஒரு குரலைப் பதிவிறக்கவும்.',
-        ],
-      },
       types: {
         fill: ['விடுபட்ட சொல்', 'விடுபட்ட சொல்லைத் தேர்ந்தெடுங்கள்'],
         ref: ['வசனம் எங்கே?', 'வசனத்திற்குரிய முகவரியைத் தேர்ந்தெடுங்கள்'],
@@ -288,7 +288,7 @@
   const REF_MODES = ['all', 'first', 'off']; // read the reference: every repetition, the first only, never
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
-    repeat: 3, rate: 'normal', refMode: 'all', group: true, // memorize assistant
+    repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, // memorize assistant
   };
   {
     const saved = store.get(STORE, {});
@@ -300,6 +300,7 @@
     settings.repeat = int(saved.repeat, 1, MAX_REPEAT, 3);
     if (saved.rate in RATES) settings.rate = saved.rate;
     if (typeof saved.group === 'boolean') settings.group = saved.group;
+    if (typeof saved.mute === 'boolean') settings.mute = saved.mute;
     if (REF_MODES.includes(saved.refMode)) settings.refMode = saved.refMode;
     else if (saved.sayRef === false) settings.refMode = 'off'; // setting saved by the older on/off tick box
     if (Array.isArray(saved.types)) {
@@ -431,6 +432,12 @@
       settings.group = e.target.checked;
     } else if (name === 'refMode') {
       if (REF_MODES.includes(e.target.value)) settings.refMode = e.target.value;
+    } else if (name === 'mute') {
+      if (settings.mute === e.target.checked) return; // `input` and `change` both report one tick
+      settings.mute = e.target.checked;
+      save();
+      render(); // the start button and the voice notes depend on it
+      return $('#memo-form').elements.mute.focus();
     }
     save();
     if (form.id === 'setup') syncSetup();
@@ -567,7 +574,7 @@
   }
 
   function memoStart() {
-    if (!synth && !anyAudio()) return;
+    if (!synth && !anyAudio() && !settings.mute) return;
     memoHalt();
     memo = {
       list: memoParts(),
@@ -594,6 +601,27 @@
     if (el) el.textContent = fromFile ? L().voiceFile : L().voiceDevice;
   }
 
+  /* Voice muted: show the passage for about as long as it takes to read aloud,
+     lighting up each verse in turn, then count the repetition like a spoken one. */
+  function memoShow(token, p, start, sayRef) {
+    const speed = RATES[settings.rate];
+    const perChar = (settings.lang === 'ta' ? 85 : 65) / speed; // ms; Tamil letters take longer to say
+    const waits = (sayRef ? [{ k: -1, ms: 1500 / speed }] : []).concat(
+      p.verses.slice(start).map((v, j) => ({ k: start + j, ms: Math.max(2500 / speed, v.text.length * perChar) })));
+    let n = 0;
+    const step = () => {
+      if (!memo || memo.token !== token) return;
+      if (n >= waits.length) return memoAdvance(token);
+      const w = waits[n++];
+      if (w.k !== memo.k) {
+        memo.k = w.k;
+        memoMark();
+      }
+      memoTimer = setTimeout(step, w.ms);
+    };
+    step();
+  }
+
   /* Read the current passage once, then count the repetition and carry on.
      fromVerse: where to pick up after a pause (0 = from the top, with the reference). */
   function memoPlay(fromVerse) {
@@ -601,6 +629,7 @@
     const p = memo.list[memo.i];
     const start = Math.max(0, fromVerse || 0);
     const sayRef = start === 0 && (settings.refMode === 'all' || (settings.refMode === 'first' && memo.r === 0));
+    if (settings.mute) return memoShow(token, p, start, sayRef);
     // Each line is one thing to play: { k, src } for an audio file (with `texts` to fall
     // back on), or { k, text } for the phone's voice. k = verse index, -1 for the reference.
     // A reference may be several files in a row (see refSrc).
@@ -732,7 +761,7 @@
         <div class="card stack">
           <div class="field">
             <span class="count-label">${esc(s.memoAt(memo.i + 1, n, Math.min(doneReps + 1, memo.reps), memo.reps))}
-              <small class="badge badge-voice" id="memo-voice">${memo.fromFile == null ? '' : esc(memo.fromFile ? s.voiceFile : s.voiceDevice)}</small></span>
+              <small class="badge badge-voice" id="memo-voice">${settings.mute ? esc(s.voiceMuted) : memo.fromFile == null ? '' : esc(memo.fromFile ? s.voiceFile : s.voiceDevice)}</small></span>
             <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${at}">
               <i style="width:${(at / total) * 100}%"></i></div>
           </div>
@@ -746,6 +775,7 @@
             ${buttons}
             <button type="button" class="button" data-act="memoPrev"${memo.i === 0 ? ' disabled' : ''}>${esc(s.prevVerse)}</button>
             <button type="button" class="button" data-act="memoNext"${memo.i === n - 1 ? ' disabled' : ''}>${esc(s.nextVerse)}</button>
+            ${synth || anyAudio() ? `<button type="button" class="button" data-act="memoMute" aria-pressed="${settings.mute}">${esc(settings.mute ? s.muteOff : s.muteOn)}</button>` : ''}
             <button type="button" class="button ghost" data-act="memoStop">${esc(s.stop)}</button>
           </div>
         </div></div>`;
@@ -757,10 +787,7 @@
       `<option value="${r}"${settings.rate === r ? ' selected' : ''}>${esc(s.rates[r])}</option>`).join('');
     // an empty list only means the voices have not loaded yet
     const noVoice = synth && synth.getVoices().length > 0 && !pickVoice(settings.lang);
-    const warn = !synth ? s.noSpeech : noVoice && s.noVoice ? s.noVoice : '';
-    const help = synth && s.voiceHelp ? `<div class="flash flash-info">
-        <p><strong>${esc(s.voiceHelp.title)}</strong></p><p>${esc(s.voiceHelp.intro)}</p>
-        <ul class="bullets">${s.voiceHelp.steps.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>` : '';
+    const warn = settings.mute ? '' : !synth ? s.noSpeech : noVoice && s.noVoice ? s.noVoice : '';
     return `<div class="narrow stack">
     <form class="card stack" id="memo-form">
       <div class="field">
@@ -779,9 +806,10 @@
       <label class="check"><input type="checkbox" name="group"${settings.group ? ' checked' : ''}> <span>${esc(s.groupVerses)}</span></label>
       <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
         `<option value="${m}"${settings.refMode === m ? ' selected' : ''}>${esc(s.refModes[m])}</option>`).join('')}</select></label>
+      <label class="check"><input type="checkbox" name="mute"${settings.mute ? ' checked' : ''}> <span>${esc(s.mute)}</span></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
-      <div class="button-row end"><button class="button primary"${synth || anyAudio() ? '' : ' disabled'}>${esc(s.listen)}</button></div>
-    </form>${help}</div>`;
+      <div class="button-row end"><button class="button primary"${synth || anyAudio() || settings.mute ? '' : ' disabled'}>${esc(settings.mute ? s.startSilent : s.listen)}</button></div>
+    </form></div>`;
   }
   // voices arrive late in Chrome; refresh the "no voice" note once they are known
   if (synth && synth.addEventListener) {
@@ -1310,6 +1338,14 @@
       keepAwake(true);
       render();
       memoPlay(memo.k);
+    },
+    memoMute() {
+      // switches the voice off or on in the middle of a passage; the verse in progress starts again
+      settings.mute = !settings.mute;
+      save();
+      memoHalt();
+      render();
+      if (!memo.paused && !memo.done) memoPlay(memo.k);
     },
     memoPrev() { memoJump(-1); },
     memoNext() { memoJump(1); },
