@@ -67,7 +67,7 @@ function route(action, body) {
 function createEvent(body) {
   var title = clean(body.title, 60);
   if (!title) throw new Error('Event name is required');
-  var lang = body.lang === 'ta' ? 'ta' : 'en';
+  var lang = ['ta', 'te'].indexOf(body.lang) >= 0 ? body.lang : 'en';
   var from = int(body.from, 1, TOTAL_VERSES, 'from');
   var to = int(body.to, from, TOTAL_VERSES, 'to');
   var count = int(body.count, 1, MAX_QUESTIONS, 'count');

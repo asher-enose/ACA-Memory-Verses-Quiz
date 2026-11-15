@@ -26,7 +26,7 @@
     return a;
   };
 
-  // \p{M} keeps Tamil vowel signs attached to the word
+  // \p{M} keeps Tamil and Telugu vowel signs attached to the word
   const EDGE = /^[^\p{L}\p{N}\p{M}]+|[^\p{L}\p{N}\p{M}]+$/gu;
   const core = (w) => w.replace(EDGE, '');
   const words = (t) => t.trim().split(/\s+/);
@@ -153,12 +153,14 @@
     }
   }
 
-  /* others: the same verses in the other languages. A group event passes them
-     so that the choice of verses and game types never depends on which language
-     a player picked: every player gets the same verse and the same game at each
-     step, whatever language they read it in. */
+  /* others: the same verses in the languages that decide the plan. A group event
+     passes them so that the choice of verses and game types never depends on which
+     language a player picked: every player gets the same verse and the same game at
+     each step, whatever language they read it in. When given, only these lists are
+     checked, not the player's own, so a language outside them follows the same plan. */
   function build(all, from, to, count, types, lang, seed, others) {
-    const fits = (t, v) => eligible(t, v) && others.every((list) => eligible(t, list[v.n - 1]));
+    const lists = others.length ? others : [all];
+    const fits = (t, v) => lists.every((list) => eligible(t, list[v.n - 1]));
     const plan = random; // decides verse order and game types only
     const range = all.filter((v) => v.n >= from && v.n <= to);
     types = types.filter((t) => MAKERS[t]);

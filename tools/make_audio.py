@@ -2,19 +2,23 @@
 """Make the audio files the Memorize screen plays instead of the phone's own voice.
 
     pip install --user edge-tts
-    python3 tools/make_audio.py 1-190        # every verse, both languages
+    python3 tools/make_audio.py 1-190        # every verse, every language
     python3 tools/make_audio.py 1-5 20 31-36 # or just some
     python3 tools/make_audio.py 1-5 --force  # make them again, replacing the files
 
 For each verse number N and each language it writes, under assets/audio/<lang>/:
     vNNN.mp3   the verse text
     rNNN.mp3   its reference, e.g. "Genesis 1, 26"
+    pAAA-BBB.mp3  a passage reference said as one sentence, e.g. "Genesis 1, 26 to 28",
+               for verses AAA to BBB: one for every stretch of verses that follow on
+               from each other in a chapter (about 720 per language for all 190 verses)
     nNNN.mp3   a bare verse number, e.g. "28", for every verse that can end a passage
     to.mp3     the joining word ("to" / "முதல்"), and end.mp3 where the language needs a
                closing word ("வரை")
 
-A passage reference is not a file of its own: the app plays rNNN + to + nNNN (+ end),
-so "Genesis 1, 26" "to" "28" covers any range without a clip per range.
+The app plays pAAA-BBB for a passage reference. Where that file is missing it falls back
+to stitching rNNN + to + nNNN (+ end), which leaves a small gap between the pieces,
+so "Genesis 1, 26" "to" "28" still covers any range.
 
 Then it rewrites js/audio.js, the list of what exists, from the files on disk, and changes
 the ?v= value in index.html so browsers fetch the new list. The app plays a file when it
@@ -35,11 +39,13 @@ from pathlib import Path
 import edge_tts
 
 ROOT = Path(__file__).resolve().parent.parent
-VOICES = {'en': 'en-IN-NeerjaNeural', 'ta': 'ta-IN-PallaviNeural'}
+VOICES = {'en': 'en-IN-NeerjaNeural', 'ta': 'ta-IN-PallaviNeural', 'te': 'te-IN-ShrutiNeural'}
 # The words around a passage's last verse number: "... to 28" / "... முதல் 28 வரை".
 # Keep in step with STR.span in js/app.js.
-JOIN = {'en': {'to': 'to'}, 'ta': {'to': 'முதல்', 'end': 'வரை'}}
-REF = re.compile(r'^(.*?)\s+(\d+):(\d+)([a-z]?)$')
+JOIN = {'en': {'to': 'to'}, 'ta': {'to': 'முதல்', 'end': 'வரை'}, 'te': {'to': 'నుండి', 'end': 'వరకు'}}
+# A whole passage reference as one sentence: first reference, last verse number.
+SPAN = {'en': '%s to %s', 'ta': '%s முதல் %s வரை', 'te': '%s నుండి %s వరకు'}
+REF =re.compile(r'^(.*?)\s+(\d+):(\d+)([a-z]?)$')
 TRIES = 3
 done = 0
 
@@ -48,7 +54,7 @@ def load_verses():
     """{lang: [(ref, text), ...]} from js/verses.js, in verse-number order."""
     src = (ROOT / 'js' / 'verses.js').read_text(encoding='utf-8')
     out = {}
-    for lang, name in (('en', 'EN'), ('ta', 'TA')):
+    for lang, name in (('en', 'EN'), ('ta', 'TA'), ('te', 'TE')):
         block = re.search(r'const %s = `\n(.*?)\n`;' % name, src, re.S).group(1)
         out[lang] = [tuple(line.split('|', 1)) for line in block.split('\n')]
     return out
@@ -124,18 +130,32 @@ async def main():
                 number = int(REF.match(ref).group(3))
                 made += await say(str(number), voice, folder / ('n%03d.mp3' % number), force)
 
+        # every stretch of chosen verses that follow on, as one sentence: "Genesis 1, 26 to 28"
+        chosen = set(wanted)
+        for a in wanted:
+            b = a + 1
+            while b in chosen and follows(refs[b - 2], refs[b - 1]):
+                last = REF.match(refs[b - 1])
+                text = SPAN[lang] % (spoken(refs[a - 1]), last.group(3) + last.group(4))
+                made += await say(text, voice, folder / ('p%03d-%03d.mp3' % (a, b)), force)
+                b += 1
+
     # the manifest lists what is on disk, so deleting a file and re-running keeps it honest
     manifest = {}
     for lang in VOICES:
         folder = ROOT / 'assets' / 'audio' / lang
         numbered = lambda kind: sorted(int(p.stem[1:]) for p in folder.glob(kind + '[0-9][0-9][0-9].mp3'))
+        spans = sorted((int(p.stem[1:4]), int(p.stem[5:8]))
+                       for p in folder.glob('p[0-9][0-9][0-9]-[0-9][0-9][0-9].mp3'))
         manifest[lang] = {
             'verses': numbered('v'), 'refs': numbered('r'), 'nums': numbered('n'),
+            'spans': ['%d-%d' % s for s in spans],
             'to': (folder / 'to.mp3').exists(), 'end': (folder / 'end.mp3').exists(),
         }
     (ROOT / 'js' / 'audio.js').write_text(
         '/* Written by tools/make_audio.py: what has an audio file in assets/audio/<lang>/.\n'
-        '   verses = vNNN.mp3, refs = rNNN.mp3, nums = nNNN.mp3 (bare verse numbers), plus the\n'
+        '   verses = vNNN.mp3, refs = rNNN.mp3, nums = nNNN.mp3 (bare verse numbers),\n'
+        '   spans = pAAA-BBB.mp3 (a passage reference, verses AAA to BBB), plus the\n'
         '   joining words to.mp3 / end.mp3. Anything not listed is read by the phone\'s own voice. */\n'
         'window.AUDIO = ' + json.dumps(manifest, separators=(',', ':')) + ';\n', encoding='utf-8')
 

@@ -68,7 +68,7 @@
       review: 'Review',
       // group events
       group: 'Group quiz',
-      groupSub: 'Create an event from the settings above and share its link. Everyone who opens it gets the same questions, in English or Tamil as they choose, and their scores go on one leaderboard.',
+      groupSub: 'Create an event from the settings above and share its link. Everyone who opens it gets the same questions, in English, Tamil or Telugu as they choose, and their scores go on one leaderboard.',
       flashNote: 'Flash card is self-marked, so it is left out of group events.',
       needEventType: 'Tick at least one game type other than Flash card.',
       notConfigured: 'Group events need a one-time Google Sheet setup. See README.md.',
@@ -192,7 +192,7 @@
       change: 'அமைப்புகளை மாற்று',
       review: 'மீள்பார்வை',
       group: 'குழு வினாடி வினா',
-      groupSub: 'மேலே உள்ள அமைப்புகளைக் கொண்டு ஒரு நிகழ்வை உருவாக்கி, அதன் இணைப்பைப் பகிருங்கள். இணைப்பைத் திறக்கும் அனைவருக்கும் ஒரே கேள்விகள் (ஆங்கிலம் அல்லது தமிழ், அவரவர் விருப்பப்படி); அனைவரின் மதிப்பெண்களும் ஒரே தரவரிசைப் பட்டியலில் வரும்.',
+      groupSub: 'மேலே உள்ள அமைப்புகளைக் கொண்டு ஒரு நிகழ்வை உருவாக்கி, அதன் இணைப்பைப் பகிருங்கள். இணைப்பைத் திறக்கும் அனைவருக்கும் ஒரே கேள்விகள் (ஆங்கிலம், தமிழ் அல்லது தெலுங்கு, அவரவர் விருப்பப்படி); அனைவரின் மதிப்பெண்களும் ஒரே தரவரிசைப் பட்டியலில் வரும்.',
       flashNote: 'நினைவு அட்டை சுய மதிப்பீடு என்பதால் குழு நிகழ்வுகளில் சேர்க்கப்படாது.',
       needEventType: 'நினைவு அட்டை தவிர குறைந்தது ஒரு விளையாட்டு வகையைத் தேர்ந்தெடுங்கள்.',
       notConfigured: 'குழு நிகழ்வுகளுக்கு ஒருமுறை Google Sheet அமைப்பு தேவை. README.md பார்க்கவும்.',
@@ -280,7 +280,139 @@
         flash: 'இந்த வசனத்தை மனப்பாடமாகச் சொல்லுங்கள்',
       },
     },
+    te: {
+      church: 'ACA ఆవడి పరిచర్య',
+      title: 'కంఠస్థ వాక్యములు 2026',
+      tagline: 'క్విజ్ & ఆటలు',
+      sub: 'వాక్యములను, ప్రశ్నల సంఖ్యను ఎంచుకుని సాధన చేయండి. ప్రతిసారీ ప్రశ్నలు మారుతాయి.',
+      from: 'ఏ వాక్యము నుండి',
+      to: 'ఏ వాక్యము వరకు',
+      inRange: (n) => `${n} వాక్యములు ఎంచుకోబడ్డాయి`,
+      count: 'ప్రశ్నల సంఖ్య',
+      games: 'ఆట రకాలు',
+      all: 'అన్నీ',
+      needType: 'కనీసం ఒక ఆట రకాన్ని ఎంచుకోండి.',
+      start: 'సాధన ప్రారంభించు',
+      quit: '← నిష్క్రమించు',
+      question: (i, n) => `ప్రశ్న ${i} / ${n}`,
+      score: 'మార్కులు',
+      next: 'తరువాత',
+      finish: 'ఫలితాలు చూడు',
+      check: 'సరిచూడు',
+      clear: 'తుడిచివేయి',
+      tapWords: 'క్రింద ఉన్న పదాలను సరైన క్రమంలో తాకండి',
+      correct: 'సరైనది!',
+      wrong: 'తప్పు',
+      show: 'వాక్యము చూపించు',
+      knew: 'నాకు తెలుసు',
+      notYet: 'ఇంకా నేర్చుకోవాలి',
+      results: 'మీ ఫలితం',
+      great: 'చాలా బాగుంది!',
+      good: 'బాగుంది, కొనసాగించండి',
+      keep: 'సాధన కొనసాగించండి',
+      again: 'మళ్లీ ఆడు',
+      change: 'సెట్టింగులు మార్చు',
+      review: 'సమీక్ష',
+      group: 'గుంపు క్విజ్',
+      groupSub: 'పై సెట్టింగులతో ఒక ఈవెంట్‌ను సృష్టించి, దాని లింక్‌ను పంచుకోండి. లింక్ తెరిచిన ప్రతి ఒక్కరికీ అవే ప్రశ్నలు వస్తాయి (ఇంగ్లీష్, తమిళం లేదా తెలుగు, ఎవరి ఇష్టం వారిది); అందరి మార్కులు ఒకే లీడర్‌బోర్డ్‌లో కనిపిస్తాయి.',
+      flashNote: 'ఫ్లాష్ కార్డ్‌లో మీరే మార్కులు వేసుకుంటారు కాబట్టి అది గుంపు ఈవెంట్‌లలో ఉండదు.',
+      needEventType: 'ఫ్లాష్ కార్డ్ కాకుండా కనీసం ఒక ఆట రకాన్ని ఎంచుకోండి.',
+      notConfigured: 'గుంపు ఈవెంట్‌లకు ఒకసారి Google Sheet ఏర్పాటు అవసరం. README.md చూడండి.',
+      eventName: 'ఈవెంట్ పేరు',
+      eventNameEg: 'ఉదా. సండే స్కూల్ క్విజ్',
+      create: 'ఈవెంట్ సృష్టించు',
+      working: 'దయచేసి వేచి ఉండండి…',
+      failed: 'ఏదో పొరపాటు జరిగింది. ఇంటర్నెట్ కనెక్షన్ సరిచూసి మళ్లీ ప్రయత్నించండి.',
+      created: 'ఈవెంట్ సృష్టించబడింది',
+      shareHint: 'ఈ లింక్‌ను మీ గుంపుతో పంచుకోండి',
+      shareText: (t) => `“${t}” కంఠస్థ వాక్యముల క్విజ్‌లో చేరండి:`,
+      invite: 'ఈ క్విజ్‌ను ఇతరులకు పంపండి',
+      copy: 'లింక్ కాపీ చేయి',
+      copied: 'కాపీ అయింది!',
+      share: 'పంచుకో',
+      openQuiz: 'క్విజ్ తెరువు',
+      myEvents: 'ఈ పరికరంలో సృష్టించిన ఈవెంట్‌లు',
+      quiz: 'క్విజ్',
+      board: 'లీడర్‌బోర్డ్',
+      home: 'సాధన',
+      summary: (n, a, b) => `${n} ప్రశ్నలు · ${a} – ${b}`,
+      myResult: 'నా ఫలితం',
+      doneNote: 'మీరు ఈ క్విజ్ పూర్తి చేశారు. ఒక్కొక్కరు ఒక్కసారి మాత్రమే పాల్గొనవచ్చు.',
+      language: 'భాష',
+      yourName: 'మీ పేరు',
+      join: 'క్విజ్ ప్రారంభించు',
+      resumeAs: (name) => `${name} గా కొనసాగించు`,
+      nameTaken: 'ఈ పేరు ఈ ఈవెంట్‌లో ఇప్పటికే వాడబడింది. ఇంటిపేరు లేదా మొదటి అక్షరం చేర్చండి.',
+      rule: 'మార్కుల ప్రకారం, తరువాత తక్కువ సమయం ప్రకారం ర్యాంకు. ప్రారంభించు నొక్కగానే సమయం మొదలవుతుంది.',
+      name: 'పేరు',
+      time: 'సమయం',
+      nobody: 'ఇంకా ఎవరూ పూర్తి చేయలేదు.',
+      playing: (n) => `${n} మంది ఇంకా ఆడుతున్నారు`,
+      refresh: 'రిఫ్రెష్',
+      you: 'మీరు',
+      sending: 'మీ మార్కులు పంపబడుతున్నాయి…',
+      sendFail: 'మీ మార్కులు పంపలేకపోయాము. ఇంటర్నెట్ కనెక్షన్ సరిచూడండి.',
+      retry: 'మళ్లీ ప్రయత్నించు',
+      completed: 'పూర్తయిన క్విజ్‌లు',
+      loading: 'లోడ్ అవుతోంది…',
+      notFound: 'ఈ ఈవెంట్ లింక్ చెల్లదు.',
+      loadFail: 'ఈవెంట్‌ను లోడ్ చేయలేకపోయాము. ఇంటర్నెట్ కనెక్షన్ సరిచూడండి.',
+      memorize: 'కంఠస్థం',
+      memoTag: 'విని తిరిగి చెప్పండి',
+      memoSub: 'వాక్యములను, ప్రతి వాక్యము ఎన్నిసార్లు చదవబడాలో ఎంచుకోండి. వరుసగా వచ్చే వాక్యములను ఒకే భాగంగా కలిపి చదవవచ్చు. స్వరంతో పాటు మీరూ చెప్పండి.',
+      repeat: 'ప్రతి వాక్యము లేదా భాగము ఎన్నిసార్లు',
+      span: (a, b) => `${a} నుండి ${b} వరకు`,
+      inPassages: (n) => `${n} భాగాలుగా చదవబడుతుంది`,
+      speed: 'చదివే వేగం',
+      rates: { slow: 'నెమ్మదిగా', normal: 'సాధారణం', fast: 'వేగంగా' },
+      groupVerses: 'వరుసగా వచ్చే వాక్యములను ఒకే భాగంగా చదువు',
+      refMode: 'వాక్య సూచికను చదువు',
+      refModes: { all: 'ప్రతిసారీ', first: 'మొదటిసారి మాత్రమే', off: 'వద్దు' },
+      listen: 'వినడం ప్రారంభించు',
+      pause: 'ఆపు',
+      resume: 'కొనసాగించు',
+      stop: 'ముగించు',
+      prevVerse: '← మునుపటిది',
+      nextVerse: 'తరువాతది →',
+      memoAt: (i, n, r, m) => `భాగం ${i} / ${n} · ${r} / ${m} సారి`,
+      memoDone: 'పూర్తయింది! మళ్లీ వినండి, లేదా ముగించి కొత్త వాక్యములను ఎంచుకోండి.',
+      listenAgain: 'మళ్లీ విను',
+      voiceFile: 'రికార్డు చేసిన స్వరం',
+      voiceDevice: 'ఫోన్ స్వరం',
+      mute: 'స్వరం వద్దు (వాక్యములను మాత్రమే చూపించు)',
+      voiceMuted: 'స్వరం లేదు',
+      muteOn: 'స్వరం ఆపు',
+      muteOff: 'స్వరం ఆన్ చేయి',
+      startSilent: 'చదవడం ప్రారంభించు',
+      noSpeech: 'ఈ బ్రౌజర్ బిగ్గరగా చదవలేదు. Chrome, Edge లేదా Safari వాడండి.',
+      types: {
+        fill: ['లోపించిన పదం', 'ఖాళీని నింపే పదాన్ని ఎంచుకోండి'],
+        ref: ['వాక్యము ఎక్కడ?', 'వాక్యానికి సరైన సూచికను ఎంచుకోండి'],
+        verse: ['వాక్యము కనుగొను', 'సూచికకు సరైన వాక్యాన్ని ఎంచుకోండి'],
+        complete: ['వాక్యము పూర్తిచేయి', 'వాక్యము యొక్క మిగిలిన భాగాన్ని ఎంచుకోండి'],
+        order: ['పదాల క్రమం', 'కలగలిసిన పదాలను క్రమంలో పెట్టండి'],
+        flash: ['ఫ్లాష్ కార్డ్', 'కంఠస్థంగా చెప్పి, మీరే సరిచూసుకోండి'],
+      },
+      ask: {
+        fill: 'లోపించిన పదం ఏది?',
+        ref: 'ఈ వాక్యము ఎక్కడ ఉంది?',
+        verse: 'ఇది ఏ వాక్యము?',
+        complete: 'ఈ వాక్యము ఎలా ముగుస్తుంది?',
+        order: 'పదాలను సరైన క్రమంలో పెట్టండి',
+        flash: 'ఈ వాక్యాన్ని కంఠస్థంగా చెప్పండి',
+      },
+    },
   };
+
+  /* Languages in menu order: [code, name as its own speakers write it]. */
+  const LANGS = [['en', 'English'], ['ta', 'தமிழ்'], ['te', 'తెలుగు']];
+  /* The languages that decide which verse and which game come up in a group event. This
+     list must not grow: adding one would change the questions of events already created.
+     A language outside it follows the same plan and takes its own wording as it comes. */
+  const PLAN_LANGS = ['en', 'ta'];
+  /* The switch that keeps menus and messages in English while the verses and references
+     stay in the chosen language. Always shown in English, whatever the menus are in. */
+  const MENU_EN = 'English menu';
 
   /* ---- State ------------------------------------------------------------ */
   const MAX_REPEAT = 20;
@@ -288,17 +420,19 @@
   const REF_MODES = ['all', 'first', 'off']; // read the reference: every repetition, the first only, never
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
+    menuEn: false, // menus and messages in English; only the verses and references in the chosen language
     repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, // memorize assistant
   };
   {
     const saved = store.get(STORE, {});
     const int = (x, lo, hi, d) => (Number.isInteger(x) && x >= lo && x <= hi ? x : d);
-    if (saved.lang === 'en' || saved.lang === 'ta') settings.lang = saved.lang;
+    if (STR[saved.lang]) settings.lang = saved.lang;
     settings.from = int(saved.from, 1, TOTAL, 1);
     settings.to = int(saved.to, settings.from, TOTAL, TOTAL);
     settings.count = int(saved.count, 1, MAXQ, 10);
     settings.repeat = int(saved.repeat, 1, MAX_REPEAT, 3);
     if (saved.rate in RATES) settings.rate = saved.rate;
+    if (typeof saved.menuEn === 'boolean') settings.menuEn = saved.menuEn;
     if (typeof saved.group === 'boolean') settings.group = saved.group;
     if (typeof saved.mute === 'boolean') settings.mute = saved.mute;
     if (REF_MODES.includes(saved.refMode)) settings.refMode = saved.refMode;
@@ -328,7 +462,9 @@
   // In an event each player reads in the language they picked when joining.
   const eventLang = () => (player && player.lang) || joinLang || event.lang;
   const lang = () => (event && view !== 'setup' && view !== 'created' ? eventLang() : settings.lang);
-  const L = () => STR[lang()];
+  // lang() is the language of the verses; the menus and messages follow it unless kept in English
+  const uiLang = () => (settings.menuEn ? 'en' : lang());
+  const L = () => STR[uiLang()];
   const playerKey = (id) => `${STORE}:event:${id}`;
   const savePlayer = () => store.set(playerKey(event.id), player);
   const eventUrl = (id, kind) => `${location.origin}${location.pathname}#${kind || 'e'}=${id}`;
@@ -460,7 +596,7 @@
     if (!synth) return null;
     const voices = synth.getVoices();
     const tag = (v) => v.lang.replace('_', '-').toLowerCase();
-    const want = code === 'ta' ? ['ta-in', 'ta'] : ['en-in', 'en-gb', 'en-us', 'en'];
+    const want = code === 'en' ? ['en-in', 'en-gb', 'en-us', 'en'] : [`${code}-in`, code];
     for (const w of want) {
       const v = voices.find((x) => tag(x) === w || (w.length === 2 && tag(x).startsWith(`${w}-`)));
       if (v) return v;
@@ -550,15 +686,21 @@
   let audioUnlocked = false;
   const SILENCE = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
   const pad3 = (n) => String(n).padStart(3, '0');
-  const has = (kind, key) => !!(AUDIO[settings.lang] && AUDIO[settings.lang][kind].includes(key));
+  const has = (kind, key) => !!(AUDIO[settings.lang] && (AUDIO[settings.lang][kind] || []).includes(key));
   const clip = (name) => `assets/audio/${settings.lang}/${name}.mp3`;
   const verseSrc = (v) => (has('verses', v.n) ? clip(`v${pad3(v.n)}`) : '');
   /* The clips that make up a reference, or [] if any is missing. One verse: its own clip.
-     A passage is stitched: first reference + "to" + last verse number (+ closing word),
-     e.g. "Genesis 1, 26" "to" "28", so no clip is needed per range. */
+     A passage: one clip that says the whole reference in a single sentence
+     ("Genesis 1, 26 to 28"), named by its first and last verse number. Where that clip
+     has not been made, it is stitched from first reference + "to" + last verse number
+     (+ closing word), which has a small gap between the pieces. */
   function refSrc(p) {
     const list = AUDIO[settings.lang];
     const first = p.verses[0].n;
+    if (p.verses.length > 1) {
+      const end = p.verses[p.verses.length - 1].n;
+      if (has('spans', `${first}-${end}`)) return [clip(`p${pad3(first)}-${pad3(end)}`)];
+    }
     if (!has('refs', first)) return [];
     if (p.verses.length === 1) return [clip(`r${pad3(first)}`)];
     const last = parseInt(p.labels[p.labels.length - 1], 10);
@@ -605,7 +747,7 @@
      lighting up each verse in turn, then count the repetition like a spoken one. */
   function memoShow(token, p, start, sayRef) {
     const speed = RATES[settings.rate];
-    const perChar = (settings.lang === 'ta' ? 85 : 65) / speed; // ms; Tamil letters take longer to say
+    const perChar = (settings.lang === 'en' ? 65 : 85) / speed; // ms; Tamil and Telugu letters take longer to say
     const waits = (sayRef ? [{ k: -1, ms: 1500 / speed }] : []).concat(
       p.verses.slice(start).map((v, j) => ({ k: start + j, ms: Math.max(2500 / speed, v.text.length * perChar) })));
     let n = 0;
@@ -679,7 +821,7 @@
       if (!synth) return void (memoTimer = setTimeout(step, 0)); // nothing can read this line here
       memoVoice(false);
       const u = new SpeechSynthesisUtterance(line.text);
-      u.lang = voice ? voice.lang : settings.lang === 'ta' ? 'ta-IN' : 'en-IN';
+      u.lang = voice ? voice.lang : `${settings.lang}-IN`;
       if (voice) u.voice = voice;
       u.rate = RATES[settings.rate];
       u.onend = step;
@@ -787,7 +929,7 @@
       `<option value="${r}"${settings.rate === r ? ' selected' : ''}>${esc(s.rates[r])}</option>`).join('');
     // an empty list only means the voices have not loaded yet
     const noVoice = synth && synth.getVoices().length > 0 && !pickVoice(settings.lang);
-    const warn = settings.mute ? '' : !synth ? s.noSpeech : noVoice && s.noVoice ? s.noVoice : '';
+    const warn = settings.mute ? '' : !synth ? s.noSpeech : noVoice && settings.lang === 'en' ? s.noVoice : '';
     return `<div class="narrow stack">
     <form class="card stack" id="memo-form">
       <div class="field">
@@ -915,7 +1057,7 @@
           event = kept.event;
           board = { rows: [], playing: 0 };
         } else {
-          errorText = e.message === 'EVENT_NOT_FOUND' ? STR[settings.lang].notFound : STR[settings.lang].loadFail;
+          errorText = e.message === 'EVENT_NOT_FOUND' ? L().notFound : L().loadFail;
           view = 'error';
           return render();
         }
@@ -936,11 +1078,12 @@
       <form class="card stack" id="join-form">
         <div class="field"><p><strong>${esc(eventSummary())}</strong></p><small>${esc(s.rule)}</small></div>
         ${resume ? '' : `<div class="field"><span>${esc(s.language)}</span>
-          <div class="seg">${[['en', 'English'], ['ta', 'தமிழ்']].map(([code, label]) =>
+          <div class="seg">${LANGS.map(([code, label]) =>
             `<button type="button" data-act="joinLang" data-lang="${code}" lang="${code}" aria-pressed="${eventLang() === code}">${label}</button>`).join('')}</div>
         </div>
         <label class="field"><span>${esc(s.yourName)}</span>
           <input type="text" name="name" maxlength="40" required autocomplete="name"></label>`}
+        ${eventLang() === 'en' ? '' : `<label class="check" lang="en"><input type="checkbox" data-act="menuEn"${settings.menuEn ? ' checked' : ''}> <span>${MENU_EN}</span></label>`}
         ${notice ? `<div class="flash flash-error" role="alert">${esc(notice)}</div>` : ''}
         <div class="button-row end">
           <button class="button primary"${busy ? ' disabled' : ''}>${esc(busy ? s.working : resume ? s.resumeAs(player.name) : s.join)}</button>
@@ -986,7 +1129,7 @@
      answered one, so a page refresh cannot be used to retry a question. */
   function eventQuestions() {
     const code = eventLang();
-    const others = Object.keys(DATA).filter((c) => c !== code).map((c) => DATA[c]);
+    const others = PLAN_LANGS.map((c) => DATA[c]);
     const qs = Engine.buildSession(DATA[code], event.from, event.to, event.count, event.types, code, event.seed, others);
     qs.forEach((q, i) => {
       if (q.type === 'order') q.placed = [];
@@ -1261,10 +1404,13 @@
     }
     if (view === 'loading' || view === 'error' || view === 'created') return home;
     const item = (code, label) =>
-      `<li><button type="button" data-act="lang" data-lang="${code}" lang="${code}"${settings.lang === code ? ' aria-current="true"' : ''}>${label}</button></li>`;
+      `<li><button type="button" data-act="lang" data-lang="${code}" lang="${code}">${label}</button></li>`;
     const tabs = `<li><button type="button" data-act="exit"${view === 'memo' ? '' : ' aria-current="page"'}>${esc(s.home)}</button></li>`
       + link('#memorize', s.memorize, view === 'memo');
-    return tabs + item('en', 'English') + item('ta', 'தமிழ்');
+    // the language in use is not offered: the menu lists only the ones to switch to
+    const menu = settings.lang === 'en' ? ''
+      : `<li><button type="button" data-act="menuEn" lang="en" aria-pressed="${settings.menuEn}">${MENU_EN}</button></li>`;
+    return tabs + LANGS.filter(([code]) => code !== settings.lang).map(([code, label]) => item(code, label)).join('') + menu;
   }
 
   const MAIN = {
@@ -1282,7 +1428,8 @@
   };
 
   function render(toTop) {
-    document.documentElement.lang = lang();
+    document.documentElement.lang = uiLang();
+    document.documentElement.dataset.verses = lang(); // verse text keeps its own spacing under English menus
     document.title = `${event && view !== 'setup' ? event.title : view === 'memo' ? L().memorize : L().title} · ${L().church}`;
     $('#nav').innerHTML = navHtml();
     $('#hero').innerHTML = heroHtml();
@@ -1317,6 +1464,14 @@
       // leave the event; setting an already-empty hash would not fire hashchange
       if (location.hash.length > 1) location.hash = '';
       else route();
+    },
+    menuEn() {
+      const field = view === 'join' && $('#join-form').elements.name; // render() rebuilds the form
+      const name = field ? field.value : '';
+      settings.menuEn = !settings.menuEn;
+      save();
+      render();
+      if (field) $('#join-form').elements.name.value = name;
     },
     joinLang(el) {
       const name = $('#join-form').elements.name.value; // render() rebuilds the form

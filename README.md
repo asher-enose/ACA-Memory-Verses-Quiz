@@ -1,11 +1,14 @@
 # Memory Verses 2026 — quiz & games
 
 A quiz for the 190 memory verses of Apostolic Christian Assembly, Avadi Ministry,
-in English and Tamil. It is a plain static site: no build step, no server.
+in English, Tamil and Telugu. It is a plain static site: no build step, no server.
 
 ## Using it
 
-1. Pick the language (English / தமிழ்) in the menu bar.
+1. Pick the language (English / தமிழ் / తెలుగు) in the menu bar.
+   With Tamil or Telugu chosen, **English menu** in the menu bar keeps the menus, buttons
+   and messages in English and shows only the verses and references in that language.
+   Press it again to have everything translated.
 2. Choose the verse range (from verse – to verse).
 3. Choose how many questions (1–50).
 4. Tick the game types you want, then press Start.
@@ -54,8 +57,10 @@ other verses are still read by the phone's own voice. The player shows "Recorded
 or "Phone's voice" so you can tell which you are hearing.
 
 The files live in `assets/audio/<language>/` and are listed in `js/audio.js`. A passage
-reference is stitched from small clips ("Genesis 1, 26" + "to" + "28"), so there is no
-clip per range. To make the audio for every verse (needs internet; it sends the verse
+reference is one clip that says it as a single sentence ("Genesis 1, 26 to 28"), one for
+every stretch of verses that follow on in a chapter (about 720 per language). Where that
+clip is missing, the reference is stitched from small clips ("Genesis 1, 26" + "to" +
+"28"), which leaves a small gap. To make the audio for every verse (needs internet; it sends the verse
 text to Microsoft's online voices; takes roughly 15–25 minutes):
 
 ```
@@ -71,7 +76,10 @@ redo a clip that sounds wrong, delete that file and run it again. The script als
 the `?v=` value in `index.html` for you.
 
 Where there is no file, it uses the voice built into the browser, in the language chosen in the menu bar,
-so nothing is downloaded. A device with no Tamil voice reads only the numbers there.
+so nothing is downloaded. A device with no Tamil or Telugu voice reads only the numbers there.
+
+Telugu has no audio files until the script is run for it. The same command makes them: it
+skips the English and Tamil files that already exist and adds `assets/audio/te/`.
 
 ## Group quiz (events + leaderboard)
 
@@ -88,8 +96,8 @@ On the home page, under the practice settings, there is a **Group quiz** card:
 
 Good to know:
 
-- Each person picks English or Tamil on the screen where they enter their name.
-  Both languages get the same verses and the same game types in the same order.
+- Each person picks English, Tamil or Telugu on the screen where they enter their name.
+  Every language gets the same verses and the same game types in the same order.
 - Flash card is self-marked, so it is not used in events.
 - One go per name. A name already used in the event is refused, and a finished
   player who reopens the link sees their result, not the quiz.
@@ -152,9 +160,8 @@ All paths are relative, so it works under the repository sub-path.
 ## Editing the verses
 
 The verses live in `js/verses.js`, one per line as `reference|text`. Line N of the
-English block and line N of the Tamil block must be the same verse. They were
-typed out from the two PDFs (which contain no selectable text), so correct any
-typo you spot there.
+English, Tamil and Telugu blocks must be the same verse. They were typed out from
+the PDFs (which contain no usable selectable text), so correct any typo you spot there.
 
 ## Files
 
@@ -167,4 +174,4 @@ typo you spot there.
 - `apps-script/Code.gs` — Google Sheet backend for events and the leaderboard
 - `js/audio.js` — list of verses that have an audio file (written by the script below)
 - `tools/make_audio.py` — makes the audio files for the Memorize screen
-- `assets/` — logo and fonts (Poppins, Oooh Baby, Noto Sans Tamil; SIL Open Font License)
+- `assets/` — logo and fonts (Poppins, Oooh Baby, Noto Sans Tamil, Noto Sans Telugu; SIL Open Font License)
