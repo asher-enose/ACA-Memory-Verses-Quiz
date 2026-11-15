@@ -141,6 +141,8 @@
       startSilent: 'Start reading',
       noSpeech: 'This browser cannot read aloud. Try Chrome, Edge or Safari.',
       noVoice: 'No English voice was found on this device, so it may read silently or wrongly.',
+      enVoice: 'English voice',
+      enVoices: { in: 'Indian (female)', us: 'American (male)' },
       types: {
         fill: ['Missing word', 'Pick the word that fills the blank'],
         ref: ['Where is it?', 'Pick the reference for the verse'],
@@ -418,10 +420,12 @@
   const MAX_REPEAT = 20;
   const RATES = { slow: 0.75, normal: 1, fast: 1.25 };
   const REF_MODES = ['all', 'first', 'off']; // read the reference: every repetition, the first only, never
+  // English can be read by either voice; each has its own audio folder (tools/make_audio.py)
+  const EN_VOICES = { in: { folder: 'en', tag: 'en-IN' }, us: { folder: 'en-us', tag: 'en-US' } };
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
     menuEn: false, // menus and messages in English; only the verses and references in the chosen language
-    repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, // memorize assistant
+    repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, enVoice: 'in', // memorize assistant
   };
   {
     const saved = store.get(STORE, {});
@@ -435,6 +439,7 @@
     if (typeof saved.menuEn === 'boolean') settings.menuEn = saved.menuEn;
     if (typeof saved.group === 'boolean') settings.group = saved.group;
     if (typeof saved.mute === 'boolean') settings.mute = saved.mute;
+    if (saved.enVoice in EN_VOICES) settings.enVoice = saved.enVoice;
     if (REF_MODES.includes(saved.refMode)) settings.refMode = saved.refMode;
     else if (saved.sayRef === false) settings.refMode = 'off'; // setting saved by the older on/off tick box
     if (Array.isArray(saved.types)) {
@@ -568,6 +573,8 @@
       settings.group = e.target.checked;
     } else if (name === 'refMode') {
       if (REF_MODES.includes(e.target.value)) settings.refMode = e.target.value;
+    } else if (name === 'enVoice') {
+      if (e.target.value in EN_VOICES) settings.enVoice = e.target.value;
     } else if (name === 'mute') {
       if (settings.mute === e.target.checked) return; // `input` and `change` both report one tick
       settings.mute = e.target.checked;
@@ -596,7 +603,8 @@
     if (!synth) return null;
     const voices = synth.getVoices();
     const tag = (v) => v.lang.replace('_', '-').toLowerCase();
-    const want = code === 'en' ? ['en-in', 'en-gb', 'en-us', 'en'] : [`${code}-in`, code];
+    const want = code !== 'en' ? [`${code}-in`, code]
+      : settings.enVoice === 'us' ? ['en-us', 'en-gb', 'en-in', 'en'] : ['en-in', 'en-gb', 'en-us', 'en'];
     for (const w of want) {
       const v = voices.find((x) => tag(x) === w || (w.length === 2 && tag(x).startsWith(`${w}-`)));
       if (v) return v;
@@ -686,8 +694,10 @@
   let audioUnlocked = false;
   const SILENCE = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
   const pad3 = (n) => String(n).padStart(3, '0');
-  const has = (kind, key) => !!(AUDIO[settings.lang] && (AUDIO[settings.lang][kind] || []).includes(key));
-  const clip = (name) => `assets/audio/${settings.lang}/${name}.mp3`;
+  // the audio folder for the chosen language, and for English the chosen voice
+  const folder = () => (settings.lang === 'en' ? EN_VOICES[settings.enVoice].folder : settings.lang);
+  const has = (kind, key) => !!(AUDIO[folder()] && (AUDIO[folder()][kind] || []).includes(key));
+  const clip = (name) => `assets/audio/${folder()}/${name}.mp3`;
   const verseSrc = (v) => (has('verses', v.n) ? clip(`v${pad3(v.n)}`) : '');
   /* The clips that make up a reference, or [] if any is missing. One verse: its own clip.
      A passage: one clip that says the whole reference in a single sentence
@@ -695,7 +705,7 @@
      has not been made, it is stitched from first reference + "to" + last verse number
      (+ closing word), which has a small gap between the pieces. */
   function refSrc(p) {
-    const list = AUDIO[settings.lang];
+    const list = AUDIO[folder()];
     const first = p.verses[0].n;
     if (p.verses.length > 1) {
       const end = p.verses[p.verses.length - 1].n;
@@ -707,7 +717,7 @@
     if (!list.to || !has('nums', last)) return [];
     return [clip(`r${pad3(first)}`), clip('to'), clip(`n${pad3(last)}`)].concat(list.end ? [clip('end')] : []);
   }
-  const anyAudio = () => !!(AUDIO[settings.lang] && AUDIO[settings.lang].verses.length);
+  const anyAudio = () => !!(AUDIO[folder()] && AUDIO[folder()].verses.length);
 
   function memoClose() {
     memoHalt();
@@ -821,7 +831,7 @@
       if (!synth) return void (memoTimer = setTimeout(step, 0)); // nothing can read this line here
       memoVoice(false);
       const u = new SpeechSynthesisUtterance(line.text);
-      u.lang = voice ? voice.lang : `${settings.lang}-IN`;
+      u.lang = voice ? voice.lang : settings.lang === 'en' ? EN_VOICES[settings.enVoice].tag : `${settings.lang}-IN`;
       if (voice) u.voice = voice;
       u.rate = RATES[settings.rate];
       u.onend = step;
@@ -948,6 +958,8 @@
       <label class="check"><input type="checkbox" name="group"${settings.group ? ' checked' : ''}> <span>${esc(s.groupVerses)}</span></label>
       <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
         `<option value="${m}"${settings.refMode === m ? ' selected' : ''}>${esc(s.refModes[m])}</option>`).join('')}</select></label>
+      ${settings.lang === 'en' ? `<label class="field"><span>${esc(STR.en.enVoice)}</span><select name="enVoice">${Object.keys(EN_VOICES).map((k) =>
+        `<option value="${k}"${settings.enVoice === k ? ' selected' : ''}>${esc(STR.en.enVoices[k])}</option>`).join('')}</select></label>` : ''}
       <label class="check"><input type="checkbox" name="mute"${settings.mute ? ' checked' : ''}> <span>${esc(s.mute)}</span></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
       <div class="button-row end"><button class="button primary"${synth || anyAudio() || settings.mute ? '' : ' disabled'}>${esc(settings.mute ? s.startSilent : s.listen)}</button></div>

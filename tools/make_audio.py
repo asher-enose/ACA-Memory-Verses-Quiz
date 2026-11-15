@@ -6,7 +6,8 @@
     python3 tools/make_audio.py 1-5 20 31-36 # or just some
     python3 tools/make_audio.py 1-5 --force  # make them again, replacing the files
 
-For each verse number N and each language it writes, under assets/audio/<lang>/:
+For each verse number N and each voice it writes, under assets/audio/<folder>/ (en, en-us,
+ta, te; en-us is the American English voice reading the same English verses):
     vNNN.mp3   the verse text
     rNNN.mp3   its reference, e.g. "Genesis 1, 26"
     pAAA-BBB.mp3  a passage reference said as one sentence, e.g. "Genesis 1, 26 to 28",
@@ -39,7 +40,10 @@ from pathlib import Path
 import edge_tts
 
 ROOT = Path(__file__).resolve().parent.parent
-VOICES = {'en': 'en-IN-NeerjaNeural', 'ta': 'ta-IN-PallaviNeural', 'te': 'te-IN-ShrutiNeural'}
+# Audio folder -> voice. A folder named "<lang>-<accent>" is a second voice for that
+# language's text: "en-us" reads the English verses with an American voice.
+VOICES = {'en': 'en-IN-NeerjaNeural', 'en-us': 'en-US-GuyNeural',
+          'ta': 'ta-IN-PallaviNeural', 'te': 'te-IN-ShrutiNeural'}
 # The words around a passage's last verse number: "... to 28" / "... முதல் 28 வரை".
 # Keep in step with STR.span in js/app.js.
 JOIN = {'en': {'to': 'to'}, 'ta': {'to': 'முதல்', 'end': 'வரை'}, 'te': {'to': 'నుండి', 'end': 'వరకు'}}
@@ -117,13 +121,14 @@ async def main():
         folder.mkdir(parents=True, exist_ok=True)
         for old in folder.glob('r*-*.mp3'):  # one-clip-per-range files from the first trial
             old.unlink()
-        refs = [r for r, _ in verses[lang]]
+        text_lang = lang.split('-')[0]  # whose verses this folder reads
+        refs = [r for r, _ in verses[text_lang]]
         print('%s (%s)' % (lang, voice), flush=True)
 
-        for word, text in JOIN[lang].items():
+        for word, text in JOIN[text_lang].items():
             made += await say(text, voice, folder / (word + '.mp3'), force)
         for n in wanted:
-            ref, text = verses[lang][n - 1]
+            ref, text = verses[text_lang][n - 1]
             made += await say(text, voice, folder / ('v%03d.mp3' % n), force)
             made += await say(spoken(ref), voice, folder / ('r%03d.mp3' % n), force)
             if n > 1 and follows(refs[n - 2], ref):  # this verse can be the last of a passage
@@ -136,7 +141,7 @@ async def main():
             b = a + 1
             while b in chosen and follows(refs[b - 2], refs[b - 1]):
                 last = REF.match(refs[b - 1])
-                text = SPAN[lang] % (spoken(refs[a - 1]), last.group(3) + last.group(4))
+                text = SPAN[text_lang] % (spoken(refs[a - 1]), last.group(3) + last.group(4))
                 made += await say(text, voice, folder / ('p%03d-%03d.mp3' % (a, b)), force)
                 b += 1
 
