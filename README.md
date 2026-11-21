@@ -5,12 +5,14 @@ in English, Tamil and Telugu. It is a plain static site: no build step, no serve
 
 ## Using it
 
-1. Pick the language (English / தமிழ் / తెలుగు) in the menu bar.
-   With Tamil or Telugu chosen, **English menu** in the menu bar keeps the menus, buttons
+The app opens on **Memorize**. Select **Practice** to start a quiz.
+
+1. Pick the language (English / தமிழ் / తెలుగు) from the row below the main tabs.
+   With Tamil or Telugu chosen, **Menus in English** keeps the menus, buttons
    and messages in English and shows only the verses and references in that language.
    Press it again to have everything translated.
-2. Choose the verse range (from verse – to verse).
-3. Choose how many questions (1–50).
+2. Choose the verse range using the From and To selectors.
+3. Choose a preset or enter a question count (1–120).
 4. Tick the game types you want, then press Start.
 
 Questions are generated fresh every round: the verses, the blanked word, the
@@ -29,7 +31,7 @@ split point, the scrambled words and the wrong answers are all picked at random.
 
 **Memorize** in the menu bar opens a listening screen:
 
-1. Choose the verse range and how many times each verse or passage is repeated (1–20).
+1. Choose the verse range and how many times each verse or passage is repeated (1–10).
 2. Optionally change the reading speed, and choose when the reference is read:
    every time, the first time only, or off.
 3. Press **Start listening**.
@@ -46,7 +48,7 @@ Tick **Mute the voice (show the verses only)** to read silently: the verses are 
 and highlighted at reading pace, with the same repeats, and nothing is played. The
 player also has a **Mute voice / Unmute voice** button to switch while it is running.
 
-In English, **English voice** chooses who reads: **Indian (female)** or **American (male)**.
+In English, **American (male)** is the default. Choose **Indian (female)** under **English voice** to switch.
 Each has its own recordings (`assets/audio/en/` and `assets/audio/en-us/`).
 
 Pause, Resume, Previous, Next and Stop are on the player. Resume picks up at the
@@ -86,7 +88,7 @@ skips the English and Tamil files that already exist and adds `assets/audio/te/`
 
 ## Group quiz (events + leaderboard)
 
-On the home page, under the practice settings, there is a **Group quiz** card:
+Select **Group quiz** in the navigation:
 
 1. Set the verse range, number of questions and game types as usual.
 2. Type an event name and press **Create event**. You get a link to share
@@ -130,7 +132,7 @@ use. You can read or export the results there.
 
 **Stats** holds one number, `QuizzesCompleted`: every quiz finished by anyone,
 practice rounds and event quizzes together (a quiz abandoned half way is not
-counted). The same number is shown on the home page as "Quizzes completed".
+counted).
 Counting starts from when this setup is done. If you later change `Code.gs`, use
 **Deploy > Manage deployments > Edit > New version** so the URL stays the same.
 

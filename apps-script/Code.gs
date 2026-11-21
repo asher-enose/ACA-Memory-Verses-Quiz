@@ -19,7 +19,7 @@ var SHEETS = {
   Stats: ['Key', 'Value'] // one row: QuizzesCompleted = practice rounds + event quizzes finished
 };
 var TOTAL_VERSES = 190;
-var MAX_QUESTIONS = 50;
+var MAX_QUESTIONS = 120;
 var EVENT_TYPES = ['fill', 'ref', 'verse', 'complete', 'order']; // flash card is self-marked, so not allowed
 var MAX_TIME_MS = 24 * 60 * 60 * 1000;
 

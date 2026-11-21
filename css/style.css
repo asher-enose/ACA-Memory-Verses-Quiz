@@ -65,30 +65,45 @@ html:lang(ta) .eyebrow, html:lang(te) .eyebrow { letter-spacing: 0.5px; }
 html:lang(ta) .hero .script, html:lang(te) .hero .script { font-family: var(--font); font-size: 20px; line-height: 1.5; }
 
 /* ---- Header ------------------------------------------------------------- */
-.topbar { display: grid; justify-items: center; max-width: 1366px; margin: 0 auto; padding: 18px 33px; }
+.topbar {
+  display: flex; align-items: center; justify-content: center;
+  max-width: var(--width); margin: 0 auto; padding: 12px var(--gutter);
+}
 .logo { display: block; line-height: 0; }
-.logo img { width: 229px; height: auto; }
-.navbar { background: var(--bronze); min-height: 56px; }
-.nav-links { display: flex; justify-content: center; flex-wrap: wrap; max-width: 1366px; margin: 0 auto; padding: 0 15px; }
-.nav-links button {
-  position: relative; display: block; padding: 16px 20px; background: none; border: 0; cursor: pointer;
-  color: #fff; font: 500 15px/24px var(--font); text-transform: uppercase; letter-spacing: 1px;
+.logo img { width: 194px; height: auto; }
+.navbar { background: var(--bronze); }
+.nav-links {
+  display: flex; justify-content: center; gap: 6px; max-width: var(--width); margin: 0 auto;
+  padding: 5px var(--gutter);
 }
-.nav-links button::after {
-  content: ""; position: absolute; left: 15px; right: 15px; bottom: 8px; height: 3px;
-  background: var(--accent); transform: scaleX(0); transition: transform 0.15s;
+.nav-links li { min-width: 0; display: flex; }
+.nav-links :is(a, button) {
+  display: flex; align-items: center; justify-content: center; min-height: 44px; width: 100%;
+  padding: 8px 20px; background: transparent; border: 0; border-radius: 12px; color: #fff;
+  cursor: pointer; font: 500 15px/1.4 var(--font); text-align: center; text-decoration: none;
 }
-.nav-links button:hover::after, .nav-links button[aria-current]::after, .nav-links button[aria-pressed="true"]::after { transform: scaleX(1); }
-.nav-links a {
-  position: relative; display: block; padding: 16px 20px; color: #fff; text-decoration: none;
-  font: 500 15px/24px var(--font); text-transform: uppercase; letter-spacing: 1px;
+.nav-links :is(a, button):hover { background: rgba(255, 255, 255, 0.16); }
+.nav-links [aria-current="page"] { background: #fff; color: var(--amber-text); }
+.nav-links [aria-current="page"]:hover { background: var(--amber-tint); }
+.navbar :focus-visible { outline-color: #fff; }
+.navbar [aria-current]:focus-visible { outline-color: var(--bronze); outline-offset: -3px; }
+.language-tools { background: var(--amber-tint); }
+.language-tools:empty { display: none; }
+.language-bar {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 4px 14px; padding: 8px var(--gutter); color: var(--secondary); font-size: 14px; font-weight: 500;
 }
-.nav-links a::after {
-  content: ""; position: absolute; left: 15px; right: 15px; bottom: 8px; height: 3px;
-  background: var(--accent); transform: scaleX(0); transition: transform 0.15s;
+.language-options { display: flex; align-items: center; gap: 6px; }
+.language-options button {
+  min-width: 44px; min-height: 44px; padding: 6px 14px; border: 1px solid var(--border);
+  border-radius: var(--r-pill); background: #fff; color: var(--secondary); cursor: pointer;
+  font: 500 15px/1.4 var(--font);
 }
-.nav-links a:hover::after, .nav-links a[aria-current]::after { transform: scaleX(1); }
-.navbar :focus-visible { outline-color: #fff; outline-offset: -4px; }
+.language-options button:hover { border-color: var(--amber-text); }
+.language-options [aria-pressed="true"] { border-color: var(--amber-text); background: var(--amber-text); color: #fff; }
+.language-bar .check { min-height: 36px; gap: 8px; font-size: 14px; }
+html[data-view="game"] .topbar { display: none; }
+html[data-view="game"] .nav-links { justify-content: flex-end; }
 
 /* ---- Banner ------------------------------------------------------------- */
 .hero { background: var(--gradient); border-radius: 0 0 var(--r-section) var(--r-section); }
@@ -104,6 +119,12 @@ html:lang(ta) .hero .script, html:lang(te) .hero .script { font-family: var(--fo
 .score-pill b { font-size: 24px; font-weight: 600; }
 .progress { height: 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.6); overflow: hidden; }
 .progress i { display: block; height: 100%; border-radius: 10px; background: var(--bronze); transition: width 0.25s; }
+html[data-view="game"] .hero-inner { padding-block: 16px 22px; gap: 8px; }
+html[data-view="game"] .hero-row { align-items: center; gap: 8px; }
+html[data-view="game"] .hero-text { flex: 1; }
+html[data-view="game"] .hero h1 { font-size: 24px; letter-spacing: 0; }
+html[data-view="game"] .score-pill { padding: 4px 12px; font-size: 14px; }
+html[data-view="game"] .score-pill b { font-size: 18px; }
 
 /* ---- Body + footer ------------------------------------------------------ */
 .main { max-width: var(--width); margin: 0 auto; padding: 40px var(--gutter) 72px; min-height: 40vh; }
@@ -146,18 +167,28 @@ html:lang(ta) .hero .script, html:lang(te) .hero .script { font-family: var(--fo
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--background) 45%);
 }
 
-select, input[type="text"] {
+select, input:is([type="text"], [type="number"]) {
   width: 100%; min-height: 48px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 16px;
   background: #fff; color: var(--secondary); font: 400 16px/1.4 var(--font);
 }
-select:focus, input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(199, 126, 34, 0.2); }
+select:focus, input:is([type="text"], [type="number"]):focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(199, 126, 34, 0.2); }
 input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--bronze); flex: none; }
-input[type="range"] { width: 100%; height: 32px; margin: 0; accent-color: var(--bronze); cursor: pointer; }
 .field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; border: 0; padding: 0; margin: 0; min-width: 0; }
 .field > span, .field > legend { font-weight: 500; font-size: 15px; color: var(--secondary); padding: 0; }
 .field > legend { margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px; }
 .field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .field small { color: var(--text); }
+.count-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.count-controls input { width: 90px; }
+.count-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.count-presets button {
+  min-width: 44px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--border);
+  border-radius: var(--r-pill); background: #fff; color: var(--secondary);
+  cursor: pointer; font: 500 15px/1.4 var(--font);
+}
+.count-presets button:hover, .count-presets [aria-pressed="true"] { border-color: var(--bronze); background: var(--amber-tint); color: var(--amber-text); }
+.event-preview { padding: 12px 16px; border-radius: 16px; background: var(--amber-tint); color: var(--amber-text); overflow-wrap: anywhere; }
+.event-preview:empty { display: none; }
 .seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .seg button {
   min-height: 48px; padding: 8px 16px; border-radius: var(--r-pill); border: 1px solid var(--border); background: #fff;
@@ -166,11 +197,6 @@ input[type="range"] { width: 100%; height: 32px; margin: 0; accent-color: var(--
 .seg button:hover { border-color: var(--primary); }
 .seg button[aria-pressed="true"] { border: 2px solid var(--primary); background: var(--amber-tint); color: var(--amber-text); font-weight: 600; }
 .count-label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.count-label output {
-  min-width: 52px; text-align: center; padding: 2px 14px; border-radius: var(--r-pill);
-  background: var(--amber-tint); color: var(--amber-text); font-weight: 600; font-size: 18px;
-}
-.range-ends { display: flex; justify-content: space-between; font-size: 13px; }
 .link-button { background: none; border: 0; color: var(--bronze); font: 500 14px var(--font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px; }
 
 .type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -285,9 +311,13 @@ input[readonly] { background: var(--amber-tint); }
   :root { --gutter: 16px; }
   h1 { font-size: 32px; letter-spacing: -1px; }
   html:lang(ta) h1, html:lang(te) h1 { font-size: 26px; }
-  .topbar { padding: 14px 16px; }
-  .logo img { width: 168px; }
-  .nav-links button, .nav-links a { padding: 14px 12px; font-size: 14px; }
+  .topbar { padding: 8px 16px; }
+  .logo img { width: 144px; }
+  .nav-links { padding-inline: 8px; }
+  .nav-links li { flex: 1; }
+  .nav-links :is(a, button) { padding: 7px 5px; font-size: 14px; overflow-wrap: anywhere; }
+  html[data-view="game"] .nav-links li { flex: 0 1 auto; }
+  html[data-view="game"] .nav-links :is(a, button) { padding-inline: 12px; }
   .hero { border-radius: 0 0 30px 30px; }
   .hero-inner { padding: 26px 16px 32px; gap: 10px; }
   .hero-sub { font-size: 16px; }
@@ -306,4 +336,7 @@ input[readonly] { background: var(--amber-tint); }
 @media (max-width: 560px) {
   .field-pair, .type-grid, .options.short { grid-template-columns: minmax(0, 1fr); }
   .button-row .button { flex: 1 1 auto; }
+  .language-bar { column-gap: 8px; }
+  .language-options button { padding-inline: 10px; font-size: 14px; }
+  .language-bar .check { flex-basis: 100%; justify-content: center; }
 }

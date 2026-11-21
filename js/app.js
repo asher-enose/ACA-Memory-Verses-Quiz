@@ -1,6 +1,6 @@
 /* Screens
      practice:  setup -> game -> results
-     group:     setup -> created (share link)
+     group:     #group -> created (share link)
                 #e=ID      join (enter name) -> game -> results + leaderboard
                 #board=ID  leaderboard only
    Rendering is plain innerHTML; one delegated click handler reads data-act. */
@@ -10,7 +10,7 @@
   const DATA = window.VERSE_DATA;
   const Engine = window.Engine;
   const Api = window.Api;
-  const MAXQ = 50;
+  const MAXQ = 120;
   const TOTAL = DATA.en.length;
   const STORE = 'memoryVerses2026';
   const EVENT_TYPES = Engine.TYPES.filter((t) => t !== 'flash'); // flash card is self-marked
@@ -46,7 +46,8 @@
       all: 'Select all',
       needType: 'Choose at least one game type.',
       start: 'Start practice',
-      quit: '← Quit',
+      quit: 'Exit quiz',
+      confirmExit: 'End this practice round? Your progress will be lost.',
       question: (i, n) => `Question ${i} of ${n}`,
       score: 'Score',
       next: 'Next',
@@ -68,7 +69,7 @@
       review: 'Review',
       // group events
       group: 'Group quiz',
-      groupSub: 'Create an event from the settings above and share its link. Everyone who opens it gets the same questions, in English, Tamil or Telugu as they choose, and their scores go on one leaderboard.',
+      groupSub: 'Share one quiz with your group. Everyone gets the same questions in their chosen language and shares one leaderboard.',
       flashNote: 'Flash card is self-marked, so it is left out of group events.',
       needEventType: 'Tick at least one game type other than Flash card.',
       notConfigured: 'Group events need a one-time Google Sheet setup. See README.md.',
@@ -107,7 +108,6 @@
       sending: 'Sending your score…',
       sendFail: 'Your score could not be sent. Check your connection.',
       retry: 'Try again',
-      completed: 'Quizzes completed',
       loading: 'Loading…',
       notFound: 'This event link is not valid.',
       loadFail: 'The event could not be loaded. Check your connection.',
@@ -173,7 +173,8 @@
       all: 'அனைத்தும்',
       needType: 'குறைந்தது ஒரு விளையாட்டு வகையைத் தேர்ந்தெடுங்கள்.',
       start: 'பயிற்சியைத் தொடங்கு',
-      quit: '← வெளியேறு',
+      quit: 'வெளியேறு',
+      confirmExit: 'இந்தப் பயிற்சியை முடிக்கவா? இதுவரை அளித்த பதில்கள் இழக்கப்படும்.',
       question: (i, n) => `கேள்வி ${i} / ${n}`,
       score: 'மதிப்பெண்',
       next: 'அடுத்தது',
@@ -194,7 +195,7 @@
       change: 'அமைப்புகளை மாற்று',
       review: 'மீள்பார்வை',
       group: 'குழு வினாடி வினா',
-      groupSub: 'மேலே உள்ள அமைப்புகளைக் கொண்டு ஒரு நிகழ்வை உருவாக்கி, அதன் இணைப்பைப் பகிருங்கள். இணைப்பைத் திறக்கும் அனைவருக்கும் ஒரே கேள்விகள் (ஆங்கிலம், தமிழ் அல்லது தெலுங்கு, அவரவர் விருப்பப்படி); அனைவரின் மதிப்பெண்களும் ஒரே தரவரிசைப் பட்டியலில் வரும்.',
+      groupSub: 'ஒரே வினாடி வினாவை உங்கள் குழுவுடன் பகிருங்கள். அனைவருக்கும் அவர்கள் தேர்ந்தெடுத்த மொழியில் ஒரே கேள்விகள் வரும். மதிப்பெண்கள் ஒரே தரவரிசைப் பட்டியலில் இடம்பெறும்.',
       flashNote: 'நினைவு அட்டை சுய மதிப்பீடு என்பதால் குழு நிகழ்வுகளில் சேர்க்கப்படாது.',
       needEventType: 'நினைவு அட்டை தவிர குறைந்தது ஒரு விளையாட்டு வகையைத் தேர்ந்தெடுங்கள்.',
       notConfigured: 'குழு நிகழ்வுகளுக்கு ஒருமுறை Google Sheet அமைப்பு தேவை. README.md பார்க்கவும்.',
@@ -233,7 +234,6 @@
       sending: 'உங்கள் மதிப்பெண் அனுப்பப்படுகிறது…',
       sendFail: 'உங்கள் மதிப்பெண்ணை அனுப்ப முடியவில்லை. இணைய இணைப்பைச் சரிபார்க்கவும்.',
       retry: 'மீண்டும் முயல்',
-      completed: 'முடிக்கப்பட்ட வினாடி வினாக்கள்',
       loading: 'ஏற்றப்படுகிறது…',
       notFound: 'இந்த நிகழ்வு இணைப்பு செல்லுபடியாகாது.',
       loadFail: 'நிகழ்வை ஏற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்க்கவும்.',
@@ -295,7 +295,8 @@
       all: 'అన్నీ',
       needType: 'కనీసం ఒక ఆట రకాన్ని ఎంచుకోండి.',
       start: 'సాధన ప్రారంభించు',
-      quit: '← నిష్క్రమించు',
+      quit: 'క్విజ్ నుండి నిష్క్రమించు',
+      confirmExit: 'ఈ సాధన రౌండ్‌ను ముగించాలా? ఇప్పటివరకు ఇచ్చిన జవాబులు పోతాయి.',
       question: (i, n) => `ప్రశ్న ${i} / ${n}`,
       score: 'మార్కులు',
       next: 'తరువాత',
@@ -316,7 +317,7 @@
       change: 'సెట్టింగులు మార్చు',
       review: 'సమీక్ష',
       group: 'గుంపు క్విజ్',
-      groupSub: 'పై సెట్టింగులతో ఒక ఈవెంట్‌ను సృష్టించి, దాని లింక్‌ను పంచుకోండి. లింక్ తెరిచిన ప్రతి ఒక్కరికీ అవే ప్రశ్నలు వస్తాయి (ఇంగ్లీష్, తమిళం లేదా తెలుగు, ఎవరి ఇష్టం వారిది); అందరి మార్కులు ఒకే లీడర్‌బోర్డ్‌లో కనిపిస్తాయి.',
+      groupSub: 'మీ గుంపుతో ఒకే క్విజ్‌ను పంచుకోండి. అందరికీ వారు ఎంచుకున్న భాషలో అవే ప్రశ్నలు వస్తాయి. వారి మార్కులు ఒకే లీడర్‌బోర్డ్‌లో కనిపిస్తాయి.',
       flashNote: 'ఫ్లాష్ కార్డ్‌లో మీరే మార్కులు వేసుకుంటారు కాబట్టి అది గుంపు ఈవెంట్‌లలో ఉండదు.',
       needEventType: 'ఫ్లాష్ కార్డ్ కాకుండా కనీసం ఒక ఆట రకాన్ని ఎంచుకోండి.',
       notConfigured: 'గుంపు ఈవెంట్‌లకు ఒకసారి Google Sheet ఏర్పాటు అవసరం. README.md చూడండి.',
@@ -355,7 +356,6 @@
       sending: 'మీ మార్కులు పంపబడుతున్నాయి…',
       sendFail: 'మీ మార్కులు పంపలేకపోయాము. ఇంటర్నెట్ కనెక్షన్ సరిచూడండి.',
       retry: 'మళ్లీ ప్రయత్నించు',
-      completed: 'పూర్తయిన క్విజ్‌లు',
       loading: 'లోడ్ అవుతోంది…',
       notFound: 'ఈ ఈవెంట్ లింక్ చెల్లదు.',
       loadFail: 'ఈవెంట్‌ను లోడ్ చేయలేకపోయాము. ఇంటర్నెట్ కనెక్షన్ సరిచూడండి.',
@@ -414,10 +414,10 @@
   const PLAN_LANGS = ['en', 'ta'];
   /* The switch that keeps menus and messages in English while the verses and references
      stay in the chosen language. Always shown in English, whatever the menus are in. */
-  const MENU_EN = 'English menu';
+  const MENU_EN = 'Menus in English';
 
   /* ---- State ------------------------------------------------------------ */
-  const MAX_REPEAT = 20;
+  const MAX_REPEAT = 10;
   const RATES = { slow: 0.75, normal: 1, fast: 1.25 };
   const REF_MODES = ['all', 'first', 'off']; // read the reference: every repetition, the first only, never
   // English can be read by either voice; each has its own audio folder (tools/make_audio.py)
@@ -425,7 +425,7 @@
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
     menuEn: false, // menus and messages in English; only the verses and references in the chosen language
-    repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, enVoice: 'in', // memorize assistant
+    repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, enVoice: 'us', // memorize assistant
   };
   {
     const saved = store.get(STORE, {});
@@ -434,7 +434,7 @@
     settings.from = int(saved.from, 1, TOTAL, 1);
     settings.to = int(saved.to, settings.from, TOTAL, TOTAL);
     settings.count = int(saved.count, 1, MAXQ, 10);
-    settings.repeat = int(saved.repeat, 1, MAX_REPEAT, 3);
+    settings.repeat = Math.min(MAX_REPEAT, int(saved.repeat, 1, Infinity, 3));
     if (saved.rate in RATES) settings.rate = saved.rate;
     if (typeof saved.menuEn === 'boolean') settings.menuEn = saved.menuEn;
     if (typeof saved.group === 'boolean') settings.group = saved.group;
@@ -449,16 +449,17 @@
   }
   const save = () => store.set(STORE, settings);
 
-  let view = 'setup';  // setup | memo | created | loading | error | join | game | results | board
+  let view = 'memo';  // setup | group | memo | created | loading | error | join | game | results | board
   let game = null;     // { qs, i, score }
   let event = null;    // the group event being viewed: { id, title, lang, from, to, count, types, seed }
   let board = null;    // { rows: [{ name, score, timeMs }], playing }
   let player = null;   // this device's entry in the event: { name, token, start, answers, done, score, timeMs, sent, event }
   let notice = '';     // error text for the current form
+  let eventTitle = ''; // draft name, kept when the form is redrawn
+  let creating = false;
   let busy = false;    // a request is in flight
   let sendState = '';  // '' | sending | failed
   let errorText = '';
-  let completed = null; // quizzes finished by everyone (practice + events); null until loaded
   let joinLang = '';    // language picked on the join screen, before the player record exists
   let routeSeq = 0;     // counts navigations, so a slow load can tell it has been overtaken
   let booted = false;  // false during the first paint, so the page does not jump past the logo
@@ -473,15 +474,6 @@
   const playerKey = (id) => `${STORE}:event:${id}`;
   const savePlayer = () => store.set(playerKey(event.id), player);
   const eventUrl = (id, kind) => `${location.origin}${location.pathname}#${kind || 'e'}=${id}`;
-
-  /* The home-page counter. Failures are silent: it is only a nice-to-have. */
-  async function countQuizzes(action) {
-    if (!Api.ready()) return;
-    try {
-      completed = (await Api.call(action)).completed;
-      if (view === 'setup') $('#hero').innerHTML = heroHtml();
-    } catch (e) { /* leave the last known number */ }
-  }
 
   /* Group quizzes created on this device. Kept on the device only, on purpose:
      each device has its own list and nothing is shared between them. */
@@ -498,72 +490,103 @@
   }
 
   /* ---- Setup screen ----------------------------------------------------- */
+  const COUNT_PRESETS = [10, 25, 50, MAXQ];
+
+  function verseOptions(verses, selected) {
+    return verses.map((v) =>
+      `<option value="${v.n}"${v.n === selected ? ' selected' : ''}>${v.n}. ${esc(v.ref)}</option>`).join('');
+  }
+
+  function rangeFieldsHtml() {
+    const s = L();
+    const verses = DATA[settings.lang];
+    return `<div class="field">
+      <div class="field-pair">
+        <label class="field"><span>${esc(s.from)}</span><select name="from">${verseOptions(verses, settings.from)}</select></label>
+        <label class="field"><span>${esc(s.to)}</span><select name="to">${verseOptions(verses, settings.to)}</select></label>
+      </div>
+      <small id="in-range"></small>
+    </div>`;
+  }
+
   function setupHtml() {
     const s = L();
-    const all = DATA[settings.lang];
-    const opts = (sel) =>
-      all.map((v) => `<option value="${v.n}"${v.n === sel ? ' selected' : ''}>${v.n}. ${esc(v.ref)}</option>`).join('');
-    const types = Engine.TYPES.map((t) => `
+    const group = view === 'group';
+    const types = (group ? EVENT_TYPES : Engine.TYPES).map((t) => `
       <label class="type">
         <input type="checkbox" name="type" value="${t}"${settings.types.includes(t) ? ' checked' : ''}>
         <span><strong>${esc(s.types[t][0])}</strong><small>${esc(s.types[t][1])}</small></span>
       </label>`).join('');
     return `<div class="narrow stack">
-    <form class="card stack" id="setup">
-      <div class="field">
-        <div class="field-pair">
-          <label class="field"><span>${esc(s.from)}</span><select name="from">${opts(settings.from)}</select></label>
-          <label class="field"><span>${esc(s.to)}</span><select name="to">${opts(settings.to)}</select></label>
+    <form class="card stack" id="${group ? 'event-form' : 'setup'}">
+      ${rangeFieldsHtml()}
+      <fieldset class="field">
+        <legend><label for="question-count">${esc(s.count)}</label></legend>
+        <div class="count-controls">
+          <div class="count-presets">${COUNT_PRESETS.map((n) =>
+            `<button type="button" data-act="countPreset" data-count="${n}" aria-pressed="${n === settings.count}">${n}</button>`).join('')}</div>
+          <input type="number" id="question-count" name="count" min="1" max="${MAXQ}" step="1" value="${settings.count}" required>
         </div>
-        <small id="in-range"></small>
-      </div>
-      <label class="field">
-        <span class="count-label">${esc(s.count)} <output id="count-out">${settings.count}</output></span>
-        <input type="range" name="count" min="1" max="${MAXQ}" step="1" value="${settings.count}">
-        <span class="range-ends"><span>1</span><span>${MAXQ}</span></span>
-      </label>
+      </fieldset>
       <fieldset class="field">
         <legend>${esc(s.games)} <button type="button" class="link-button" data-act="all">${esc(s.all)}</button></legend>
         <div class="type-grid">${types}</div>
-        <small id="need-type" hidden>${esc(s.needType)}</small>
+        <small id="need-type" hidden>${esc(group ? s.needEventType : s.needType)}</small>
+        ${group ? `<small>${esc(s.flashNote)}</small>` : ''}
       </fieldset>
-      <div class="button-row end"><button class="button primary" id="start">${esc(s.start)}</button></div>
+      ${group ? `
+        <label class="field"><span>${esc(s.eventName)}</span>
+          <input type="text" name="title" maxlength="60" required value="${esc(eventTitle)}" placeholder="${esc(s.eventNameEg)}" autocomplete="off"></label>
+        <p class="event-preview" id="event-preview"></p>
+        ${Api.ready() ? '' : `<div class="flash flash-info">${esc(s.notConfigured)}</div>`}
+        ${notice ? `<div class="flash flash-error" role="alert">${esc(notice)}</div>` : ''}
+      ` : ''}
+      <div class="button-row end"><button class="button primary" id="start">${esc(group ? (creating ? s.working : s.create) : s.start)}</button></div>
     </form>
-    <form class="card stack" id="event-form">
-      <div class="field"><h2>${esc(s.group)}</h2><p>${esc(s.groupSub)}</p><small>${esc(s.flashNote)}</small></div>
-      ${Api.ready() ? '' : `<div class="flash flash-info">${esc(s.notConfigured)}</div>`}
-      <label class="field"><span>${esc(s.eventName)}</span>
-        <input type="text" name="title" maxlength="60" required placeholder="${esc(s.eventNameEg)}" autocomplete="off"></label>
-      ${notice ? `<div class="flash flash-error" role="alert">${esc(notice)}</div>` : ''}
-      <div class="button-row end"><button class="button" id="create"${busy || !Api.ready() ? ' disabled' : ''}>${esc(busy ? s.working : s.create)}</button></div>
-      ${eventsListHtml()}
-    </form></div>`;
+    ${group ? eventsListHtml() : ''}</div>`;
   }
 
   function syncSetup() {
-    $('#in-range').textContent = L().inRange(settings.to - settings.from + 1);
-    $('#count-out').textContent = settings.count;
-    const none = settings.types.length === 0;
+    const s = L();
+    const group = view === 'group';
+    const form = $(group ? '#event-form' : '#setup');
+    const countValid = form.elements.count.validity.valid;
+    $('#in-range').textContent = s.inRange(settings.to - settings.from + 1);
+    form.querySelectorAll('[data-count]').forEach((button) => {
+      button.setAttribute('aria-pressed', countValid && Number(button.dataset.count) === settings.count);
+    });
+    const none = !(group ? EVENT_TYPES : Engine.TYPES).some((t) => settings.types.includes(t));
     $('#need-type').hidden = !none;
-    $('#start').disabled = none;
+    $('#start').disabled = none || (group && (creating || !Api.ready()));
+    if (group) {
+      const verses = DATA[settings.lang];
+      $('#event-preview').textContent = countValid
+        ? s.summary(settings.count, verses[settings.from - 1].ref, verses[settings.to - 1].ref) : '';
+    }
   }
 
   function onSetupInput(e) {
     const form = e.target.closest ? e.target.closest('form') : null;
-    if (!form || (form.id !== 'setup' && form.id !== 'memo-form')) return;
+    if (!form || !['setup', 'event-form', 'memo-form'].includes(form.id)) return;
     const name = e.target.name;
+    if (name === 'title') {
+      eventTitle = e.target.value;
+      return;
+    }
     if (name === 'from' || name === 'to') {
       settings[name] = Number(e.target.value);
       // keep the range valid by dragging the other end along
       if (settings.from > settings.to) {
         const other = name === 'from' ? 'to' : 'from';
         settings[other] = settings[name];
-        form.elements[other].value = settings[name];
+        form.elements[other].value = settings[other];
       }
     } else if (name === 'count') {
-      settings.count = Math.min(MAXQ, Math.max(1, Number(e.target.value) || 1));
+      if (!e.target.validity.valid) return syncSetup();
+      settings.count = e.target.valueAsNumber;
     } else if (name === 'type') {
       const on = [...form.querySelectorAll('input[name="type"]:checked')].map((el) => el.value);
+      if (form.id === 'event-form' && settings.types.includes('flash')) on.push('flash');
       settings.types = Engine.TYPES.filter((t) => on.includes(t));
     } else if (name === 'repeat') {
       settings.repeat = Math.min(MAX_REPEAT, Math.max(1, Number(e.target.value) || 1));
@@ -583,8 +606,8 @@
       return $('#memo-form').elements.mute.focus();
     }
     save();
-    if (form.id === 'setup') syncSetup();
-    else syncMemo();
+    if (form.id === 'memo-form') syncMemo();
+    else syncSetup();
   }
 
   /* ---- Memorize assistant ----------------------------------------------
@@ -894,7 +917,6 @@
 
   function syncMemo() {
     $('#in-range').textContent = `${L().inRange(settings.to - settings.from + 1)}, ${L().inPassages(memoParts().length)}`;
-    $('#repeat-out').textContent = settings.repeat;
   }
 
   function memoHtml() {
@@ -939,9 +961,6 @@
           </div>
         </div></div>`;
     }
-    const all = DATA[settings.lang];
-    const opts = (sel) =>
-      all.map((v) => `<option value="${v.n}"${v.n === sel ? ' selected' : ''}>${v.n}. ${esc(v.ref)}</option>`).join('');
     const rates = Object.keys(RATES).map((r) =>
       `<option value="${r}"${settings.rate === r ? ' selected' : ''}>${esc(s.rates[r])}</option>`).join('');
     // an empty list only means the voices have not loaded yet
@@ -949,18 +968,11 @@
     const warn = settings.mute ? '' : !synth ? s.noSpeech : noVoice && settings.lang === 'en' ? s.noVoice : '';
     return `<div class="narrow stack">
     <form class="card stack" id="memo-form">
-      <div class="field">
-        <div class="field-pair">
-          <label class="field"><span>${esc(s.from)}</span><select name="from">${opts(settings.from)}</select></label>
-          <label class="field"><span>${esc(s.to)}</span><select name="to">${opts(settings.to)}</select></label>
-        </div>
-        <small id="in-range"></small>
-      </div>
-      <label class="field">
-        <span class="count-label">${esc(s.repeat)} <output id="repeat-out">${settings.repeat}</output></span>
-        <input type="range" name="repeat" min="1" max="${MAX_REPEAT}" step="1" value="${settings.repeat}">
-        <span class="range-ends"><span>1</span><span>${MAX_REPEAT}</span></span>
-      </label>
+      ${rangeFieldsHtml()}
+      <label class="field"><span>${esc(s.repeat)}</span><select name="repeat">
+        ${Array.from({ length: MAX_REPEAT }, (_, i) => i + 1).map((n) =>
+          `<option value="${n}"${settings.repeat === n ? ' selected' : ''}>${n}</option>`).join('')}
+      </select></label>
       <label class="field"><span>${esc(s.speed)}</span><select name="rate">${rates}</select></label>
       <label class="check"><input type="checkbox" name="group"${settings.group ? ' checked' : ''}> <span>${esc(s.groupVerses)}</span></label>
       <label class="field"><span>${esc(s.refMode)}</span><select name="refMode">${REF_MODES.map((m) =>
@@ -979,32 +991,33 @@
 
   /* ---- Group events ----------------------------------------------------- */
   async function createEvent(title) {
+    if (creating || !Api.ready()) return;
     const types = settings.types.filter((t) => EVENT_TYPES.includes(t));
-    const keepTitle = () => { $('#event-form').elements.title.value = title; }; // render() rebuilds the form
     if (!types.length) {
       notice = L().needEventType;
-      render();
-      return keepTitle();
+      return render();
     }
-    busy = true;
+    const ticket = routeSeq;
+    creating = true;
     notice = '';
     render();
-    keepTitle();
     try {
       const res = await Api.call('createEvent', {
         title, lang: settings.lang, from: settings.from, to: settings.to, count: settings.count, types,
       });
-      event = res.event;
       const mine = store.get(`${STORE}:created`, []);
-      mine.unshift({ id: event.id, title: event.title });
+      mine.unshift({ id: res.event.id, title: res.event.title });
       store.set(`${STORE}:created`, mine.slice(0, 20));
-      view = 'created';
+      if (eventTitle.trim() === title) eventTitle = '';
+      if (ticket === routeSeq) {
+        event = res.event;
+        view = 'created';
+      }
     } catch (e) {
-      notice = L().failed;
+      if (ticket === routeSeq) notice = L().failed;
     }
-    busy = false;
-    render(view === 'created');
-    if (view === 'setup') keepTitle();
+    creating = false;
+    if (view === 'group' || view === 'created') render(view === 'created');
   }
 
   /* The event's quiz link with copy / share / WhatsApp. Shown when an event is created,
@@ -1032,6 +1045,7 @@
       <div class="button-row">
         <a class="button ghost" href="#e=${esc(event.id)}">${esc(s.openQuiz)}</a>
         <a class="button ghost" href="#board=${esc(event.id)}">${esc(s.board)}</a>
+        <button type="button" class="button ghost" data-act="showGroup">${esc(s.group)}</button>
       </div>
     </div>`;
   }
@@ -1043,7 +1057,8 @@
 
   /* Hash routes: #e=ID opens the quiz, #board=ID the leaderboard. */
   async function route() {
-    const m = /^#(e|board)=([a-z0-9]+)$/i.exec(location.hash);
+    const hash = location.hash;
+    const m = /^#(e|board)=([a-z0-9]+)$/i.exec(hash);
     game = null;
     notice = '';
     sendState = '';
@@ -1051,9 +1066,8 @@
     if (!m) {
       routeSeq++;
       event = board = player = null;
-      view = location.hash === '#memorize' ? 'memo' : 'setup';
+      view = !hash || hash === '#memorize' ? 'memo' : hash === '#group' ? 'group' : 'setup';
       render(true);
-      if (view === 'setup') countQuizzes('stats');
       return;
     }
     const id = m[2];
@@ -1397,6 +1411,7 @@
         </div>`;
     }
     if (view === 'created') return title(s.created, event.title);
+    if (view === 'group') return title(s.church, s.group, `<p class="hero-sub">${esc(s.groupSub)}</p>`);
     if (view === 'join') return title(s.group, event.title);
     if (view === 'board') return title(s.board, event.title, `<p class="hero-sub">${esc(eventSummary())}</p>`);
     if (view === 'memo') {
@@ -1407,7 +1422,6 @@
     return `<p class="eyebrow">${esc(s.church)}</p>
       <div class="hero-row">
         <div class="hero-text"><h1>${esc(s.title)}</h1><p class="script">${esc(s.tagline)}</p><p class="hero-sub">${esc(s.sub)}</p></div>
-        ${completed == null ? '' : `<span class="score-pill">${esc(s.completed)} <b>${completed}</b></span>`}
       </div>`;
   }
 
@@ -1415,25 +1429,36 @@
     const s = L();
     const link = (href, label, current) => `<li><a href="${href}"${current ? ' aria-current="page"' : ''}>${esc(label)}</a></li>`;
     if (view === 'game') {
-      return event ? link(`#board=${event.id}`, s.quit) : `<li><button type="button" data-act="home">${esc(s.quit)}</button></li>`;
+      return event ? link(`#board=${event.id}`, s.quit) : `<li><button type="button" data-act="quitPractice">${esc(s.quit)}</button></li>`;
     }
-    const home = `<li><button type="button" data-act="exit">${esc(s.home)}</button></li>`;
+    const home = view === 'results' && !event
+      ? `<li><button type="button" data-act="home" aria-current="page">${esc(s.home)}</button></li>`
+      : link('#practice', s.home, view === 'setup');
     if (view === 'join' || view === 'board' || (view === 'results' && event)) {
       return link(`#e=${event.id}`, player && player.done ? s.myResult : s.quiz, view !== 'board') + link(`#board=${event.id}`, s.board, view === 'board') + home;
     }
-    if (view === 'loading' || view === 'error' || view === 'created') return home;
-    const item = (code, label) =>
-      `<li><button type="button" data-act="lang" data-lang="${code}" lang="${code}">${label}</button></li>`;
-    const tabs = `<li><button type="button" data-act="exit"${view === 'memo' ? '' : ' aria-current="page"'}>${esc(s.home)}</button></li>`
-      + link('#memorize', s.memorize, view === 'memo');
-    // the language in use is not offered: the menu lists only the ones to switch to
-    const menu = settings.lang === 'en' ? ''
-      : `<li><button type="button" data-act="menuEn" lang="en" aria-pressed="${settings.menuEn}">${MENU_EN}</button></li>`;
-    return tabs + LANGS.filter(([code]) => code !== settings.lang).map(([code, label]) => item(code, label)).join('') + menu;
+    const group = view === 'created'
+      ? `<li><button type="button" data-act="showGroup" aria-current="page">${esc(s.group)}</button></li>`
+      : link('#group', s.group, view === 'group');
+    return home + link('#memorize', s.memorize, view === 'memo') + group;
+  }
+
+  function languageHtml() {
+    if (event || !['setup', 'group', 'memo', 'results'].includes(view)) return '';
+    return `<div class="language-bar">
+      <span id="language-label">${esc(L().language)}</span>
+      <div class="language-options" role="group" aria-labelledby="language-label">
+        ${LANGS.map(([code, label]) => `<button type="button" data-act="lang" data-lang="${code}"
+          lang="${code}" aria-pressed="${code === settings.lang}">${label}</button>`).join('')}
+      </div>
+      ${settings.lang === 'en' ? '' : `<label class="check" lang="en">
+        <input type="checkbox" data-act="menuEn"${settings.menuEn ? ' checked' : ''}> <span>${MENU_EN}</span></label>`}
+    </div>`;
   }
 
   const MAIN = {
     setup: setupHtml,
+    group: setupHtml,
     memo: memoHtml,
     created: createdHtml,
     join: joinHtml,
@@ -1449,13 +1474,16 @@
   function render(toTop) {
     document.documentElement.lang = uiLang();
     document.documentElement.dataset.verses = lang(); // verse text keeps its own spacing under English menus
-    document.title = `${event && view !== 'setup' ? event.title : view === 'memo' ? L().memorize : L().title} · ${L().church}`;
+    document.documentElement.dataset.view = view;
+    const s = L();
+    document.title = `${event ? event.title : view === 'memo' ? s.memorize : view === 'group' ? s.group : s.title} · ${s.church}`;
+    $('#language-tools').innerHTML = languageHtml();
     $('#nav').innerHTML = navHtml();
     $('#hero').innerHTML = heroHtml();
     $('#main').innerHTML = MAIN[view]();
-    if (view === 'setup') syncSetup();
+    if (view === 'setup' || view === 'group') syncSetup();
     if (view === 'memo' && !memo) syncMemo();
-    if (toTop && booted) document.querySelector('.navbar').scrollIntoView();
+    if (toTop && booted) document.querySelector('.site-header').scrollIntoView();
     const next = $('#next');
     if (next) next.focus({ preventScroll: true }); // Enter moves on, but the page must not jump when an answer is picked
   }
@@ -1463,34 +1491,44 @@
   /* ---- Events ----------------------------------------------------------- */
   const ACTIONS = {
     lang(el) {
-      settings.lang = el.dataset.lang;
-      save();
-      memoClose(); // the verses being read are in the other language
-      if (view === 'results') view = 'setup'; // the finished round is in the other language
-      render();
+      if (settings.lang !== el.dataset.lang) {
+        settings.lang = el.dataset.lang;
+        save();
+        memoClose(); // the verses being read are in the other language
+        if (view === 'results') view = 'setup';
+        render();
+      }
+      $('#language-tools [aria-pressed="true"]').focus({ preventScroll: true });
     },
-    all() {
-      settings.types = Engine.TYPES.slice();
-      save();
-      render();
+    all(el) {
+      const inputs = el.form.querySelectorAll('input[name="type"]');
+      inputs.forEach((input) => { input.checked = true; });
+      onSetupInput({ target: inputs[0] });
+    },
+    countPreset(el) {
+      el.form.elements.count.value = el.dataset.count;
+      onSetupInput({ target: el.form.elements.count });
     },
     home() {
       view = 'setup';
       game = null;
       render(true);
     },
-    exit() {
-      // leave the event; setting an already-empty hash would not fire hashchange
-      if (location.hash.length > 1) location.hash = '';
-      else route();
+    quitPractice() {
+      if (window.confirm(L().confirmExit)) ACTIONS.home();
     },
-    menuEn() {
+    showGroup() {
+      if (location.hash === '#group') route();
+      else location.hash = 'group';
+    },
+    menuEn(el) {
       const field = view === 'join' && $('#join-form').elements.name; // render() rebuilds the form
       const name = field ? field.value : '';
       settings.menuEn = !settings.menuEn;
       save();
       render();
       if (field) $('#join-form').elements.name.value = name;
+      if (el.closest('#language-tools')) $('#language-tools input').focus({ preventScroll: true });
     },
     joinLang(el) {
       const name = $('#join-form').elements.name.value; // render() rebuilds the form
@@ -1578,7 +1616,7 @@
       if (event) return finishEvent();
       view = 'results';
       render(true);
-      countQuizzes('practiceDone');
+      if (Api.ready()) Api.call('practiceDone').catch(() => {}); // results remain available offline
     },
   };
 
