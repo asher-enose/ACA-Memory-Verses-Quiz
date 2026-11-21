@@ -612,10 +612,10 @@
     return null;
   }
 
-  /* "Isaiah 40:6b" -> { book, chapter, verse: 6, label: "6b" } */
   function parseRef(ref) {
-    const m = /^(.*?)\s+(\d+):(\d+)([a-z]?)$/.exec(ref);
-    return m ? { book: m[1], chapter: Number(m[2]), verse: Number(m[3]), label: m[3] + m[4] } : null;
+    const m = /^(.*?)\s+(\d+):(\d+[a-z]?)(?:-(\d+[a-z]?))?$/.exec(ref);
+    if (!m) return null;
+    return { book: m[1], chapter: Number(m[2]), start: m[3], end: m[4] || m[3] };
   }
 
   /* The chosen range as passages: { ref, verses, labels }. With grouping on, verses that
@@ -630,14 +630,17 @@
     let prev = null;
     list.forEach((v) => {
       const at = parseRef(v.ref);
-      const follows = at && prev && at.book === prev.book && at.chapter === prev.chapter && at.verse === prev.verse + 1;
+      const follows = at && prev && at.book === prev.book && at.chapter === prev.chapter &&
+        parseInt(at.start, 10) === parseInt(prev.end, 10) + 1;
+      const label = at ? (at.start === at.end ? at.start : `${at.start}-${at.end}`) : '';
       if (follows) {
         const p = out[out.length - 1];
         p.verses.push(v);
-        p.labels.push(at.label);
-        p.ref = STR[code].span(p.verses[0].ref, at.label);
+        p.labels.push(label);
+        const firstRef = p.verses[0].ref.replace(/-\d+[a-z]?$/, '');
+        p.ref = STR[code].span(firstRef, at.end);
       } else {
-        out.push({ ref: v.ref, verses: [v], labels: [at ? at.label : ''] });
+        out.push({ ref: v.ref, verses: [v], labels: [label] });
       }
       prev = at;
     });
@@ -697,7 +700,8 @@
   // the audio folder for the chosen language, and for English the chosen voice
   const folder = () => (settings.lang === 'en' ? EN_VOICES[settings.enVoice].folder : settings.lang);
   const has = (kind, key) => !!(AUDIO[folder()] && (AUDIO[folder()][kind] || []).includes(key));
-  const clip = (name) => `assets/audio/${folder()}/${name}.mp3`;
+  const audioVersion = document.currentScript?.src ? new URL(document.currentScript.src).search : '';
+  const clip = (name) => `assets/audio/${folder()}/${name}.mp3${folder() === 'te' ? audioVersion : ''}`;
   const verseSrc = (v) => (has('verses', v.n) ? clip(`v${pad3(v.n)}`) : '');
   /* The clips that make up a reference, or [] if any is missing. One verse: its own clip.
      A passage: one clip that says the whole reference in a single sentence
@@ -713,7 +717,9 @@
     }
     if (!has('refs', first)) return [];
     if (p.verses.length === 1) return [clip(`r${pad3(first)}`)];
-    const last = parseInt(p.labels[p.labels.length - 1], 10);
+    // The first clip for a range already announces two numbers.
+    if (p.labels[0].includes('-')) return [];
+    const last = parseInt(p.labels[p.labels.length - 1].split('-').pop(), 10);
     if (!list.to || !has('nums', last)) return [];
     return [clip(`r${pad3(first)}`), clip('to'), clip(`n${pad3(last)}`)].concat(list.end ? [clip('end')] : []);
   }
@@ -789,7 +795,8 @@
     const add = (src, texts, k) => (src ? lines.push({ src, texts, k, rest: 0 }) : lines.push(...spoken(texts, k)));
     const lines = [];
     if (sayRef) {
-      const refText = [p.ref.replace(/(\d+):(\d+)/, '$1, $2')]; // "1:26" is read as a clock time by some voices
+      const reference = p.ref.replace(/(.+:\d+[a-z]?)-(\d+[a-z]?)$/, (_, first, end) => STR[settings.lang].span(first, end));
+      const refText = [reference.replace(/(\d+):(\d+)/, '$1, $2')]; // "1:26" is read as a clock time by some voices
       const pieces = refSrc(p);
       // `rest` = pieces of this reference still to come: if one fails, the phone's voice
       // reads the whole reference once and those are dropped
