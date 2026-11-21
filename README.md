@@ -29,6 +29,10 @@ split point, the scrambled words and the wrong answers are all picked at random.
 
 ## Memorize assistant
 
+Use **Needs focus** to mark verses from the verse list, during listening, or in quiz review.
+In Practice and Memorize, **Only verses marked Needs focus** uses the marked verses within
+the selected range. Marks are saved on the device for each language.
+
 **Memorize** in the menu bar opens a listening screen:
 
 1. Choose the verse range and how many times each verse or passage is repeated (1–10).

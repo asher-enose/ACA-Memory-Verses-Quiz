@@ -143,11 +143,12 @@
   const TYPES = Object.keys(MAKERS);
 
   /* all: verses of one language; from/to: verse numbers (inclusive).
-     seed: optional integer; the same seed always gives the same questions. */
-  function buildSession(all, from, to, count, types, lang, seed, others) {
+     seed: optional integer; the same seed always gives the same questions.
+     targets: optional set of verse numbers for practice, with distractors still drawn from all. */
+  function buildSession(all, from, to, count, types, lang, seed, others, targets) {
     random = seed == null ? Math.random : seeded(seed);
     try {
-      return build(all, from, to, count, types, lang, seed, others || []);
+      return build(all, from, to, count, types, lang, seed, others || [], targets);
     } finally {
       random = Math.random;
     }
@@ -158,11 +159,11 @@
      language a player picked: every player gets the same verse and the same game at
      each step, whatever language they read it in. When given, only these lists are
      checked, not the player's own, so a language outside them follows the same plan. */
-  function build(all, from, to, count, types, lang, seed, others) {
+  function build(all, from, to, count, types, lang, seed, others, targets) {
     const lists = others.length ? others : [all];
     const fits = (t, v) => lists.every((list) => eligible(t, list[v.n - 1]));
     const plan = random; // decides verse order and game types only
-    const range = all.filter((v) => v.n >= from && v.n <= to);
+    const range = all.filter((v) => v.n >= from && v.n <= to && (!targets || targets.has(v.n)));
     types = types.filter((t) => MAKERS[t]);
     if (!range.length || !types.length) return [];
     // leave out verses too short for every chosen game; if that leaves nothing, use them anyway

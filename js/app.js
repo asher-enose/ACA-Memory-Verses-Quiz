@@ -42,6 +42,10 @@
       to: 'To verse',
       inRange: (n) => (n === 1 ? '1 verse selected' : `${n} verses selected`),
       count: 'Number of questions',
+      markFocus: 'Needs focus',
+      focusOnly: 'Only verses marked Needs focus',
+      noFocus: 'No verses in this range are marked Needs focus.',
+      manageFocus: 'Mark verses that need focus',
       games: 'Game types',
       all: 'Select all',
       needType: 'Choose at least one game type.',
@@ -169,6 +173,10 @@
       to: 'எந்த வசனம் வரை',
       inRange: (n) => `${n} வசனங்கள் தேர்ந்தெடுக்கப்பட்டன`,
       count: 'கேள்விகளின் எண்ணிக்கை',
+      markFocus: 'கவனம் தேவை',
+      focusOnly: 'கவனம் தேவை என்று குறித்த வசனங்கள் மட்டும்',
+      noFocus: 'இந்த வரம்பில் கவனம் தேவை என்று குறித்த வசனங்கள் இல்லை.',
+      manageFocus: 'கவனம் தேவைப்படும் வசனங்களைக் குறிக்கவும்',
       games: 'விளையாட்டு வகைகள்',
       all: 'அனைத்தும்',
       needType: 'குறைந்தது ஒரு விளையாட்டு வகையைத் தேர்ந்தெடுங்கள்.',
@@ -291,6 +299,10 @@
       to: 'ఏ వాక్యము వరకు',
       inRange: (n) => `${n} వాక్యములు ఎంచుకోబడ్డాయి`,
       count: 'ప్రశ్నల సంఖ్య',
+      markFocus: 'మరింత సాధన అవసరం',
+      focusOnly: 'మరింత సాధన అవసరమని గుర్తించిన వాక్యాలు మాత్రమే',
+      noFocus: 'ఈ పరిధిలో మరింత సాధన అవసరమని గుర్తించిన వాక్యాలు లేవు.',
+      manageFocus: 'మరింత సాధన అవసరమైన వాక్యాలను గుర్తించండి',
       games: 'ఆట రకాలు',
       all: 'అన్నీ',
       needType: 'కనీసం ఒక ఆట రకాన్ని ఎంచుకోండి.',
@@ -424,7 +436,7 @@
   const EN_VOICES = { in: { folder: 'en', tag: 'en-IN' }, us: { folder: 'en-us', tag: 'en-US' } };
   const settings = {
     lang: 'en', from: 1, to: TOTAL, count: 10, types: ['fill', 'complete', 'order'],
-    menuEn: false, // menus and messages in English; only the verses and references in the chosen language
+    menuEn: false, focusOnly: false, // menus in English and personal verse filter
     repeat: 3, rate: 'normal', refMode: 'all', group: true, mute: false, enVoice: 'us', // memorize assistant
   };
   {
@@ -437,6 +449,7 @@
     settings.repeat = Math.min(MAX_REPEAT, int(saved.repeat, 1, Infinity, 3));
     if (saved.rate in RATES) settings.rate = saved.rate;
     if (typeof saved.menuEn === 'boolean') settings.menuEn = saved.menuEn;
+    if (typeof saved.focusOnly === 'boolean') settings.focusOnly = saved.focusOnly;
     if (typeof saved.group === 'boolean') settings.group = saved.group;
     if (typeof saved.mute === 'boolean') settings.mute = saved.mute;
     if (saved.enVoice in EN_VOICES) settings.enVoice = saved.enVoice;
@@ -448,6 +461,11 @@
     }
   }
   const save = () => store.set(STORE, settings);
+  const focusKey = `${STORE}:focus`;
+  const savedFocus = store.get(focusKey, {});
+  const focusByLanguage = Object.fromEntries(LANGS.map(([code]) => [
+    code, new Set(Array.isArray(savedFocus[code]) ? savedFocus[code] : []),
+  ]));
 
   let view = 'memo';  // setup | group | memo | created | loading | error | join | game | results | board
   let game = null;     // { qs, i, score }
@@ -491,6 +509,34 @@
 
   /* ---- Setup screen ----------------------------------------------------- */
   const COUNT_PRESETS = [10, 25, 50, MAXQ];
+  const focusedVerses = () => focusByLanguage[settings.lang];
+
+  function studyVerses() {
+    const verses = DATA[settings.lang].slice(settings.from - 1, settings.to);
+    return settings.focusOnly ? verses.filter((v) => focusedVerses().has(v.n)) : verses;
+  }
+
+  function focusButton(v) {
+    const label = L().markFocus;
+    return `<button class="focus-mark" type="button" data-act="markFocus" data-verse="${v.n}"
+      aria-pressed="${focusByLanguage[lang()].has(v.n)}" aria-label="${esc(`${label} · ${v.ref}`)}">${esc(label)}</button>`;
+  }
+
+  function focusFilterHtml() {
+    const s = L();
+    return `<div class="field">
+      <label class="check"><input type="checkbox" name="focusOnly"${settings.focusOnly ? ' checked' : ''}> <span>${esc(s.focusOnly)}</span></label>
+      <small id="focus-empty" role="status" hidden>${esc(s.noFocus)}</small>
+    </div>`;
+  }
+
+  function focusListHtml() {
+    return `<details class="focus-list">
+      <summary>${esc(L().manageFocus)}</summary>
+      <ul class="rows">${DATA[settings.lang].map((v) =>
+        `<li><div class="row-head"><span>${v.n}. ${esc(v.ref)}</span>${focusButton(v)}</div></li>`).join('')}</ul>
+    </details>`;
+  }
 
   function verseOptions(verses, selected) {
     return verses.map((v) =>
@@ -520,6 +566,7 @@
     return `<div class="narrow stack">
     <form class="card stack" id="${group ? 'event-form' : 'setup'}">
       ${rangeFieldsHtml()}
+      ${group ? '' : focusFilterHtml() + focusListHtml()}
       <fieldset class="field">
         <legend><label for="question-count">${esc(s.count)}</label></legend>
         <div class="count-controls">
@@ -551,13 +598,15 @@
     const group = view === 'group';
     const form = $(group ? '#event-form' : '#setup');
     const countValid = form.elements.count.validity.valid;
-    $('#in-range').textContent = s.inRange(settings.to - settings.from + 1);
+    const count = group ? settings.to - settings.from + 1 : studyVerses().length;
+    $('#in-range').textContent = s.inRange(count);
+    if (!group) $('#focus-empty').hidden = count > 0;
     form.querySelectorAll('[data-count]').forEach((button) => {
       button.setAttribute('aria-pressed', countValid && Number(button.dataset.count) === settings.count);
     });
     const none = !(group ? EVENT_TYPES : Engine.TYPES).some((t) => settings.types.includes(t));
     $('#need-type').hidden = !none;
-    $('#start').disabled = none || (group && (creating || !Api.ready()));
+    $('#start').disabled = none || !count || (group && (creating || !Api.ready()));
     if (group) {
       const verses = DATA[settings.lang];
       $('#event-preview').textContent = countValid
@@ -588,6 +637,8 @@
       const on = [...form.querySelectorAll('input[name="type"]:checked')].map((el) => el.value);
       if (form.id === 'event-form' && settings.types.includes('flash')) on.push('flash');
       settings.types = Engine.TYPES.filter((t) => on.includes(t));
+    } else if (name === 'focusOnly') {
+      settings.focusOnly = e.target.checked;
     } else if (name === 'repeat') {
       settings.repeat = Math.min(MAX_REPEAT, Math.max(1, Number(e.target.value) || 1));
     } else if (name === 'rate') {
@@ -643,18 +694,17 @@
 
   /* The chosen range as passages: { ref, verses, labels }. With grouping on, verses that
      follow on from each other share a passage; with it off, every verse is its own. */
-  function memoParts() {
-    const list = DATA[settings.lang].slice(settings.from - 1, settings.to);
+  function memoParts(list = studyVerses()) {
     return settings.group ? passages(list, settings.lang) : list.map((v) => ({ ref: v.ref, verses: [v], labels: [''] }));
   }
 
   function passages(list, code) {
     const out = [];
     let prev = null;
-    list.forEach((v) => {
+    list.forEach((v, i) => {
       const at = parseRef(v.ref);
       const follows = at && prev && at.book === prev.book && at.chapter === prev.chapter &&
-        parseInt(at.start, 10) === parseInt(prev.end, 10) + 1;
+        v.n === list[i - 1].n + 1 && parseInt(at.start, 10) === parseInt(prev.end, 10) + 1;
       const label = at ? (at.start === at.end ? at.start : `${at.start}-${at.end}`) : '';
       if (follows) {
         const p = out[out.length - 1];
@@ -756,9 +806,17 @@
 
   function memoStart() {
     if (!synth && !anyAudio() && !settings.mute) return;
+    const list = memoParts();
+    if (!list.length) {
+      if (memo) {
+        memoClose();
+        render(true);
+      }
+      return;
+    }
     memoHalt();
     memo = {
-      list: memoParts(),
+      list,
       reps: settings.repeat, i: 0, r: 0, k: -1, paused: false, done: false, token: 0,
     };
     keepAwake(true);
@@ -916,7 +974,11 @@
   }
 
   function syncMemo() {
-    $('#in-range').textContent = `${L().inRange(settings.to - settings.from + 1)}, ${L().inPassages(memoParts().length)}`;
+    const verses = studyVerses();
+    const s = L();
+    $('#in-range').textContent = `${s.inRange(verses.length)}, ${s.inPassages(memoParts(verses).length)}`;
+    $('#focus-empty').hidden = verses.length > 0;
+    $('#listen-start').disabled = !verses.length || (!synth && !anyAudio() && !settings.mute);
   }
 
   function memoHtml() {
@@ -926,8 +988,10 @@
       const n = memo.list.length;
       const many = p.verses.length > 1;
       const first = p.verses[0].n;
-      const verses = p.verses.map((v, j) =>
-        `<p class="verse${many && j === memo.k ? ' now' : ''}" data-k="${j}">${many ? `<sup>${esc(p.labels[j])}</sup> ` : ''}${esc(v.text)}</p>`).join('');
+      const verses = p.verses.map((v, j) => `<div class="memo-line">
+        <p class="verse${many && j === memo.k ? ' now' : ''}" data-k="${j}">${many ? `<sup>${esc(p.labels[j])}</sup> ` : ''}${esc(v.text)}</p>
+        ${focusButton(v)}
+      </div>`).join('');
       const doneReps = memo.done ? memo.reps : memo.r;
       const dots = Array.from({ length: memo.reps }, (x, j) =>
         `<i class="${j < doneReps ? 'on' : j === doneReps && !memo.paused ? 'now' : ''}"></i>`).join('');
@@ -969,6 +1033,8 @@
     return `<div class="narrow stack">
     <form class="card stack" id="memo-form">
       ${rangeFieldsHtml()}
+      ${focusFilterHtml()}
+      ${focusListHtml()}
       <label class="field"><span>${esc(s.repeat)}</span><select name="repeat">
         ${Array.from({ length: MAX_REPEAT }, (_, i) => i + 1).map((n) =>
           `<option value="${n}"${settings.repeat === n ? ' selected' : ''}>${n}</option>`).join('')}
@@ -981,7 +1047,7 @@
         `<option value="${k}"${settings.enVoice === k ? ' selected' : ''}>${esc(STR.en.enVoices[k])}</option>`).join('')}</select></label>` : ''}
       <label class="check"><input type="checkbox" name="mute"${settings.mute ? ' checked' : ''}> <span>${esc(s.mute)}</span></label>
       ${warn ? `<div class="flash flash-info" role="status">${esc(warn)}</div>` : ''}
-      <div class="button-row end"><button class="button primary"${synth || anyAudio() || settings.mute ? '' : ' disabled'}>${esc(settings.mute ? s.startSilent : s.listen)}</button></div>
+      <div class="button-row end"><button class="button primary" id="listen-start">${esc(settings.mute ? s.startSilent : s.listen)}</button></div>
     </form></div>`;
   }
   // voices arrive late in Chrome; refresh the "no voice" note once they are known
@@ -1250,7 +1316,17 @@
   /* ---- Game screen ------------------------------------------------------ */
   function startPractice() {
     if (!settings.types.length) return;
-    const qs = Engine.buildSession(DATA[settings.lang], settings.from, settings.to, settings.count, settings.types, settings.lang);
+    const targets = settings.focusOnly ? focusedVerses() : null;
+    const qs = Engine.buildSession(DATA[settings.lang], settings.from, settings.to, settings.count, settings.types, settings.lang,
+      undefined, undefined, targets);
+    if (!qs.length) {
+      if (view === 'results') {
+        view = 'setup';
+        game = null;
+        render(true);
+      }
+      return;
+    }
     qs.forEach((q) => { if (q.type === 'order') q.placed = []; }); // chip indexes, in tapped order
     game = { qs, i: 0, score: 0 };
     view = 'game';
@@ -1330,6 +1406,7 @@
       <div class="flash ${q.correct ? 'flash-ok' : 'flash-error'}" role="status">
         <h2>${esc(q.correct ? s.correct : s.wrong)}</h2>
         ${q.type === 'flash' ? '' : `<p><strong>${esc(q.v.ref)}</strong> — ${esc(q.v.text)}</p>`}
+        ${event ? '' : focusButton(q.v)}
       </div>
       <div class="button-row end next-bar"><button type="button" class="button primary" id="next" data-act="next">${esc(last ? s.finish : s.next)}</button></div>`;
     return `<div class="narrow stack">
@@ -1349,6 +1426,7 @@
           <small>${esc(s.types[q.type][0])}</small>
         </div>
         <p>${esc(q.v.text)}</p>
+        ${focusButton(q.v)}
       </li>`).join('');
     return `<div class="card"><h2>${esc(s.review)}</h2><ul class="rows">${rows}</ul></div>`;
   }
@@ -1490,6 +1568,18 @@
 
   /* ---- Events ----------------------------------------------------------- */
   const ACTIONS = {
+    markFocus(el) {
+      const n = Number(el.dataset.verse);
+      const set = focusByLanguage[lang()];
+      const mark = !set.has(n);
+      if (mark) set.add(n);
+      else set.delete(n);
+      store.set(focusKey, Object.fromEntries(LANGS.map(([code]) => [code, [...focusByLanguage[code]]])));
+      document.querySelectorAll(`[data-act="markFocus"][data-verse="${n}"]`).forEach((button) => {
+        button.setAttribute('aria-pressed', mark);
+      });
+      if (view === 'memo' && !memo) syncMemo();
+    },
     lang(el) {
       if (settings.lang !== el.dataset.lang) {
         settings.lang = el.dataset.lang;
