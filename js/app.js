@@ -142,7 +142,7 @@
       noSpeech: 'This browser cannot read aloud. Try Chrome, Edge or Safari.',
       noVoice: 'No English voice was found on this device, so it may read silently or wrongly.',
       enVoice: 'English voice',
-      enVoices: { in: 'Indian (female)', us: 'American (male)' },
+      enVoices: { in: 'Indian', us: 'American' },
       types: {
         fill: ['Missing word', 'Pick the word that fills the blank'],
         ref: ['Where is it?', 'Pick the reference for the verse'],

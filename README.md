@@ -48,7 +48,7 @@ Tick **Mute the voice (show the verses only)** to read silently: the verses are 
 and highlighted at reading pace, with the same repeats, and nothing is played. The
 player also has a **Mute voice / Unmute voice** button to switch while it is running.
 
-In English, **American (male)** is the default. Choose **Indian (female)** under **English voice** to switch.
+In English, **American** is the default. Choose **Indian** under **English voice** to switch.
 Each has its own recordings (`assets/audio/en/` and `assets/audio/en-us/`).
 
 Pause, Resume, Previous, Next and Stop are on the player. Resume picks up at the
