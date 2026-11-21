@@ -73,20 +73,21 @@ html:lang(ta) .hero .script, html:lang(te) .hero .script { font-family: var(--fo
 .logo img { width: 194px; height: auto; }
 .navbar { background: var(--bronze); }
 .nav-links {
-  display: flex; justify-content: center; gap: 6px; max-width: var(--width); margin: 0 auto;
-  padding: 5px var(--gutter);
+  display: flex; justify-content: center; max-width: 1366px; margin: 0 auto; padding: 0 15px;
 }
 .nav-links li { min-width: 0; display: flex; }
 .nav-links :is(a, button) {
-  display: flex; align-items: center; justify-content: center; min-height: 44px; width: 100%;
-  padding: 8px 20px; background: transparent; border: 0; border-radius: 12px; color: #fff;
-  cursor: pointer; font: 500 15px/1.4 var(--font); text-align: center; text-decoration: none;
+  position: relative; display: flex; align-items: center; justify-content: center; width: 100%;
+  padding: 16px 20px; border: 0; background: none; color: #fff; cursor: pointer;
+  font: 500 15px/24px var(--font); text-align: center; text-decoration: none;
+  text-transform: uppercase; letter-spacing: 1px;
 }
-.nav-links :is(a, button):hover { background: rgba(255, 255, 255, 0.16); }
-.nav-links [aria-current="page"] { background: #fff; color: var(--amber-text); }
-.nav-links [aria-current="page"]:hover { background: var(--amber-tint); }
-.navbar :focus-visible { outline-color: #fff; }
-.navbar [aria-current]:focus-visible { outline-color: var(--bronze); outline-offset: -3px; }
+.nav-links :is(a, button)::after {
+  content: ""; position: absolute; inset: auto 15px 8px; height: 3px;
+  background: var(--accent); transform: scaleX(0); transition: transform 0.15s;
+}
+.nav-links :is(a, button):is(:hover, [aria-current="page"])::after { transform: scaleX(1); }
+.navbar :focus-visible { outline-color: #fff; outline-offset: -4px; }
 .language-tools { background: var(--amber-tint); }
 .language-tools:empty { display: none; }
 .language-bar {
@@ -315,7 +316,7 @@ input[readonly] { background: var(--amber-tint); }
   .logo img { width: 144px; }
   .nav-links { padding-inline: 8px; }
   .nav-links li { flex: 1; }
-  .nav-links :is(a, button) { padding: 7px 5px; font-size: 14px; overflow-wrap: anywhere; }
+  .nav-links :is(a, button) { padding: 14px 6px; font-size: 14px; overflow-wrap: anywhere; }
   html[data-view="game"] .nav-links li { flex: 0 1 auto; }
   html[data-view="game"] .nav-links :is(a, button) { padding-inline: 12px; }
   .hero { border-radius: 0 0 30px 30px; }

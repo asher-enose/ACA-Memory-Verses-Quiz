@@ -7,7 +7,7 @@ in English, Tamil and Telugu. It is a plain static site: no build step, no serve
 
 The app opens on **Memorize**. Select **Practice** to start a quiz.
 
-1. Pick the language (English / தமிழ் / తెలుగు) from the row below the main tabs.
+1. Pick the language (English / தமிழ் / తెలుగు) from the row above the main tabs.
    With Tamil or Telugu chosen, **Menus in English** keeps the menus, buttons
    and messages in English and shows only the verses and references in that language.
    Press it again to have everything translated.
